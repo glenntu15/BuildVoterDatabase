@@ -3,7 +3,8 @@ import time
 #from Block_File_Interface import Block_File_Interface
 
 BLOCKSIZE=4096
-LRECL = 128
+LRECL = 128   # Logical RECord Length (as opposed to physical records)
+DICTIONARY_RECL = 16
 REGISTERED_VOTERS_TO_PROCESS = 500000
 
 #----------------------------------------------------------------------------------
@@ -25,7 +26,7 @@ def Build_Dictionary(file_path_name, voter_dictionary):
     # we precalulate the block number and offset where the record will be stored the next pass through
     buffer_num = 0
     offset = 0
-    dictionary_record_length = 16
+    
  
     print(" Opening file: ",file_path_name)
     try:
@@ -34,16 +35,17 @@ def Build_Dictionary(file_path_name, voter_dictionary):
         print(" could not open file")
         exit(1)
 
-    # skip the header line
-    line = infile.readline()
+       # skip the header line on the original file -- not on these
+       #line = infile.readline()
     while True:
 
         ## debug 500000 records
-        if (nrecs >= REGISTERED_VOTERS_TO_PROCESS ):
-            break
+        #if (nrecs > REGISTERED_VOTERS_TO_PROCESS ):
+        #    break
         ## end debug
         line = infile.readline();
         if not line:
+            #print(" end of file, nrecs ",nrecs,"last record ",string_parts0)
             break
         l = len(line)
         if (l > maxreclen):
@@ -52,11 +54,12 @@ def Build_Dictionary(file_path_name, voter_dictionary):
         #    print(" record is too long, record is: ",line);
 
         nrecs = nrecs + 1
+        
         parts = line.split(splitchar)
-
         
         string_parts0 = parts[fld_voterid].replace('"','')
         string_parts1 = parts[fld_sosid].replace('"','')
+
 
         if (len(string_parts1) < 2):
             sosid = 0
@@ -74,7 +77,7 @@ def Build_Dictionary(file_path_name, voter_dictionary):
             voter_dictionary[idnumber] = (sosid, buffer_num, offset)
             #if (buffer_num > 0):
                 #print("***************** sosid ", sosid,"buffer ", buffer_num,"offset ", offset)
-            offset = offset + dictionary_record_length
+            offset = offset + LRECL
             if (offset > BLOCKSIZE):
                 buffer_num = buffer_num + 1
                 offset = 0
@@ -111,8 +114,8 @@ def build_database(file_path_name,blbuilder):
         nrecs = nrecs + 1
         # We just save the first 100 chars, the rest is padding (could be used)
         savstring = line[0:100]
-        barray = bytes(savstring, 'ascii')
-        buffer[1:100] = barray
+        barray = bytes(savstring, 'utf-8')
+        buffer[0:100] = barray
         blbuilder.write_record_to_block(buffer,LRECL)
 
 #----------------------------------------------------------------------------------
@@ -218,22 +221,22 @@ blbuilder = Block_IO()
 registered_voters = {}
 
 nrecs = 0
+maxlrecl = 0
 
 registered_filename = "HARRIS COUNTY.csv"
 dataLocation = "C:/tmp/"
 file_path_name = dataLocation + registered_filename
 
-result = Build_Dictionary(file_path_name, registered_voters)
+# range may be up to 5, the first 4 files are 500000 records each
+for i in range(1):              
+    file_path_name = dataLocation + "registered_voters" + str(i) + ".csv"
+    result = Build_Dictionary(file_path_name, registered_voters)
+    nrecs = nrecs + result[0];
+    if (result[1] > maxlrecl):
+        maxrecl = result[1]
 
-nrecs = result[0];
-maxrecl = result[1]
 print("finished, nrecs, lrecs: ",nrecs,maxrecl)
-print(" sanity check")
-#for vid, result in registered_voters.items():
-#    sosid = result[0]
-##    block = result[1]
-#    offset = result[2]
-#    print("vid: ",vid," sosid: ",sosid," block ",block," offset ",offset)
+#print(" sanity check")
 
 print(" blocks so far... ",blbuilder.return_block_count())
 
@@ -249,7 +252,11 @@ blbuilder.write_dictionary(registered_voters)
 t2 = time.process_time()
 print(" print time to write dictionary: ",(t2-t1))
 t1 = time.process_time()
-build_database(file_path_name,blbuilder)
+
+for i in range(1):              
+    file_path_name = dataLocation + "registered_voters" + str(i) + ".csv"
+    build_database(file_path_name,blbuilder)
+
 t2 = time.process_time()
 print(" print time to build database: ",(t2-t1))
 

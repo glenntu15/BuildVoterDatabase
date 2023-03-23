@@ -1,4 +1,7 @@
 
+from tarfile import BLOCKSIZE
+
+
 class Block_File_Interface(object):
     BLOCKSIZE = 4096
     def __init__(self):
@@ -34,6 +37,7 @@ class Block_File_Interface(object):
             print(" could not open file")
             exit(1)
         self.isopen_read = True
+        print(" seekable: ",self.infile.seekable())
 #----------------------------------------------------------------------------------
 
     def close_file(self):
@@ -57,9 +61,17 @@ class Block_File_Interface(object):
         try:
             buffer = self.infile.read(self.BLOCKSIZE)
         except IOError:
-            print(" could read from file")
+            print(" could not read from file")
         self.blocks_read = self.blocks_read + 1
         return buffer
+
+    def read_required_block(self,blocknum):
+        file_offset = (self.directory_block_offset + blocknum + 1) * BLOCKSIZE # offset in bytes
+        self.infile.seek(file_offset,0)
+        print(" reading block: ",(self.directory_block_offset + blocknum + 1)," offset ",file_offset)
+        buffer = self.infile.read()
+        return buffer
+
 #----------------------------------------------------------------------------------
     
 
