@@ -15,6 +15,40 @@ def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
     fld_voterid = 1
     fld_sosid = 2
 
+    
+   
+    # try reading the first data record
+    #record = bio.read_spcific_record(0,0,LRECL)
+    idnumber = 41926668
+    result = registered_voters[idnumber]
+    print(" found dictionary entry for id ",idnumber, " sosid",result[0]," block ",result[1]," offset",result[2])
+    record = bio.read_spcific_record(result[1],result[2],LRECL)
+    testdata = record[0:100]
+    sdata = testdata.decode("'utf-8'")
+    print(" debug first entry: ",sdata)
+    # now try the 20 th record
+    idnumber = 36531523
+    result = registered_voters[idnumber]
+    print(" found dictionary entry for id ",idnumber, " sosid",result[0]," block ",result[1]," offset",result[2])
+    record = bio.read_spcific_record(result[1],result[2],LRECL)
+    testdata = record[0:100]
+    sdata = testdata.decode("'utf-8'")
+    print(" debug 20th entry: ",sdata)
+    # now try the 33 entry -- next block
+    idnumber =80109549
+    result = registered_voters[idnumber]
+    print(" found dictionary entry for id ",idnumber, " sosid",result[0]," block ",result[1]," offset",result[2])
+    record = bio.read_spcific_record(result[1],result[2],LRECL)
+    testdata = record[0:100]
+    sdata = testdata.decode("'utf-8'")
+    print(" debug 33rd entry: ",sdata)
+
+
+    #testdata = record[0:100]
+    #print(" debug testdata: ",testdata[0:20])
+    #sdata = testdata.decode("'utf-8'")
+    #print(sdata)
+
     print(" Opening file: ",key_file_path_name)
     try:
         infile = open(key_file_path_name, 'r')
@@ -23,13 +57,7 @@ def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
         exit(1)
 
     nrecs = 0
-   
-    # try reading the first data record
-    record = bio.read_spcific_record(0,0,LRECL)
-    testdata = record[0:100]
-    print(" testdata: ",testdata)
-    sdata = testdata.decode("'utf-8'")
-    print(sdata)
+
     while True:
 
         line = infile.readline();
@@ -50,11 +78,11 @@ def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
         result = registered_voters[idnumber]
         print(" found dictionary entry for id ",idnumber, " sosid",result[0]," block ",result[1]," offset",result[2])
         record = bio.read_spcific_record(result[1],result[2],LRECL)
-        print(" returned type = ",type(record))
+        
         testdata = record[0:100]
         sdata = testdata.decode("'utf-8'")
-        
-        print(record)
+        print(sdata)
+
         if (nrecs > 3):
             break
 #----------------------------------------------------------------------------------

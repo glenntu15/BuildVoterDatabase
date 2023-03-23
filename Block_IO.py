@@ -41,6 +41,7 @@ class Block_IO():
     def write_record_to_block(self, record, length):
         if (self.bufferpos+length > BLOCKSIZE):
             self.bs.write_block(self.buffer)
+            print(" block written ",self.buffer[0:64])
             self.bufferpos = 0
 
         self.buffer[self.bufferpos:self.bufferpos+length] = record
@@ -60,7 +61,8 @@ class Block_IO():
 
     def read_spcific_record(self,blocknum,offset,length):
         self.buffer = self.bs.read_required_block(blocknum)
-        bufferpos = 0
+        print(" block read ",self.buffer[0:32])
+        self.bufferpos = offset
         record = self.buffer[self.bufferpos:self.bufferpos+length]
         return record
    #----------------------------------------------------------------------------------
@@ -151,7 +153,6 @@ class Block_IO():
         # Buffer may be partly full... need to write it
         if bufferpos > 0:
             self.clear_last_block()
-            self.bs.write_block(self.buffer)
         print(" blocks written: ",self.bs.blocks_written)
         #print("**** debug extract entries")
         #bytes_val = buffer[bufferpos:bufferpos+4]

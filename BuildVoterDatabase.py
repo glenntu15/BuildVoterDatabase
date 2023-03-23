@@ -78,7 +78,7 @@ def Build_Dictionary(file_path_name, voter_dictionary):
             #if (buffer_num > 0):
                 #print("***************** sosid ", sosid,"buffer ", buffer_num,"offset ", offset)
             offset = offset + LRECL
-            if (offset > BLOCKSIZE):
+            if (offset >= BLOCKSIZE):
                 buffer_num = buffer_num + 1
                 offset = 0
             #
@@ -99,8 +99,8 @@ def build_database(file_path_name,blbuilder):
         print(" could not open file")
         exit(1)
 
-    # skip the header line
-    line = infile.readline()
+    # skip the header line -- no header file in split data
+    #line = infile.readline()
     nrecs = 0
     while True:
 
@@ -114,8 +114,15 @@ def build_database(file_path_name,blbuilder):
         nrecs = nrecs + 1
         # We just save the first 100 chars, the rest is padding (could be used)
         savstring = line[0:100]
-        barray = bytes(savstring, 'utf-8')
+        #barray = bytes(savstring, 'utf-8')
+        barray = savstring.encode('utf-8')
         buffer[0:100] = barray
+        
+        #if nrecs < 2:
+        #    print(" debug buffer: ",buffer[0:20])
+        #    newstring = buffer.decode('utf-8')
+        #    print(" decoded string: ",newstring)
+
         blbuilder.write_record_to_block(buffer,LRECL)
 
 #----------------------------------------------------------------------------------
@@ -223,13 +230,14 @@ registered_voters = {}
 nrecs = 0
 maxlrecl = 0
 
-registered_filename = "HARRIS COUNTY.csv"
+#registered_filename = "HARRIS COUNTY.csv"
 dataLocation = "C:/tmp/"
-file_path_name = dataLocation + registered_filename
+#file_path_name = dataLocation + registered_filename
 
 # range may be up to 5, the first 4 files are 500000 records each
 for i in range(1):              
-    file_path_name = dataLocation + "registered_voters" + str(i) + ".csv"
+    #file_path_name = dataLocation + "registered_voters" + str(i) + ".csv"
+    file_path_name = dataLocation + "test_file" + str(i) + ".csv"
     result = Build_Dictionary(file_path_name, registered_voters)
     nrecs = nrecs + result[0];
     if (result[1] > maxlrecl):
@@ -241,6 +249,8 @@ print("finished, nrecs, lrecs: ",nrecs,maxrecl)
 print(" blocks so far... ",blbuilder.return_block_count())
 
 ##########
+# Uncomment this section to rebuild the key file
+#
 # This section is just to build a list of keys in a file
 #nrecs = process_voters(dataLocation, registered_voters)
 #print(" nrecs = ",nrecs)
@@ -254,7 +264,9 @@ print(" print time to write dictionary: ",(t2-t1))
 t1 = time.process_time()
 
 for i in range(1):              
-    file_path_name = dataLocation + "registered_voters" + str(i) + ".csv"
+    #file_path_name = dataLocation + "registered_voters" + str(i) + ".csv"
+    file_path_name = dataLocation + "test_file" + str(i) + ".csv"
+
     build_database(file_path_name,blbuilder)
 
 t2 = time.process_time()

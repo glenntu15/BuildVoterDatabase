@@ -1,5 +1,4 @@
 
-from tarfile import BLOCKSIZE
 
 
 class Block_File_Interface(object):
@@ -66,10 +65,11 @@ class Block_File_Interface(object):
         return buffer
 
     def read_required_block(self,blocknum):
-        file_offset = (self.directory_block_offset + blocknum + 1) * BLOCKSIZE # offset in bytes
+        file_offset = (self.directory_block_offset + blocknum) * self.BLOCKSIZE # offset in bytes
         self.infile.seek(file_offset,0)
-        print(" reading block: ",(self.directory_block_offset + blocknum + 1)," offset ",file_offset)
+        print(" reading block: ",(self.directory_block_offset + blocknum)," offset in file ",file_offset," tell: ",self.infile.tell())
         buffer = self.infile.read()
+        print(" after seek and read buffer: ",buffer[0:64])
         return buffer
 
 #----------------------------------------------------------------------------------
