@@ -27,13 +27,14 @@ class Block_IO():
     def set_output_file(self,filename):
         self.bs.open_for_write(filename)
         self.bufferpos = 0
-
+ #----------------------------------------------------------------------------------
     def close_output_file(self):
         nb = self.bs.close_file()
         return(nb)
     #----------------------------------------------------------------------------------
     def clear_last_block(self):
         # write out last block and reset bufferpos
+        #print(" clear last block: len is ",len(self.buffer))
         self.bs.write_block(self.buffer)
         self.bufferpos = 0
 
@@ -41,7 +42,7 @@ class Block_IO():
     def write_record_to_block(self, record, length):
         if (self.bufferpos+length > BLOCKSIZE):
             self.bs.write_block(self.buffer)
-            print(" block written ",self.buffer[0:64])
+            #print(" block written ",self.buffer[0:64])
             self.bufferpos = 0
 
         self.buffer[self.bufferpos:self.bufferpos+length] = record
@@ -61,10 +62,20 @@ class Block_IO():
 
     def read_spcific_record(self,blocknum,offset,length):
         self.buffer = self.bs.read_required_block(blocknum)
-        print(" block read ",self.buffer[0:32])
+        #print(" block read ",self.buffer[0:32])
         self.bufferpos = offset
         record = self.buffer[self.bufferpos:self.bufferpos+length]
         return record
+   #----------------------------------------------------------------------------------
+    def debug_read_records(self):
+        self.bs.open_for_read("database.bin")
+        self.buffer = self.bs.read_block()
+        print(" block: 1 ",self.buffer[0:36])
+        self.buffer = self.bs.read_block()
+        print(" block: 2 ",self.buffer[0:36])
+        self.buffer = self.bs.read_block()
+        print(" block: 3 ",self.buffer[0:36])
+        self.bs.close_file()
    #----------------------------------------------------------------------------------
 
 
@@ -116,8 +127,6 @@ class Block_IO():
             bytes_val = vid.to_bytes(4,sys.byteorder);
             self.buffer[bufferpos:bufferpos+4] = bytes_val;
            
-
-            
             bytes_val = result[0].to_bytes(4,sys.byteorder);
             self.buffer[bufferpos+4:bufferpos+8] = bytes_val;
 
@@ -135,7 +144,7 @@ class Block_IO():
             #    print("vid = ",vid, "key = ",key)
  
             
-            debug_count = debug_count + 1
+            #debug_count = debug_count + 1
             #if (debug_count == 1):
             #    record = buffer[bufferpos:bufferpos+entry_length]
             #    print(" as written ",record)
@@ -153,7 +162,7 @@ class Block_IO():
         # Buffer may be partly full... need to write it
         if bufferpos > 0:
             self.clear_last_block()
-        print(" blocks written: ",self.bs.blocks_written)
+        #print(" blocks written: ",self.bs.blocks_written)
         #print("**** debug extract entries")
         #bytes_val = buffer[bufferpos:bufferpos+4]
         #n.from_bytes(bytes_val,sys.byteorder)

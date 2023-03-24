@@ -92,6 +92,7 @@ def Build_Dictionary(file_path_name, voter_dictionary):
 def build_database(file_path_name,blbuilder):
 
     buffer = bytearray(LRECL)
+    
     print(" Building database...Opening file: ",file_path_name)
     try:
         infile = open(file_path_name, 'r')
@@ -104,19 +105,23 @@ def build_database(file_path_name,blbuilder):
     nrecs = 0
     while True:
 
-       ## debug 500000 records
-        if (nrecs >= REGISTERED_VOTERS_TO_PROCESS ):
-            break
         line = infile.readline();
         if not line:
             break
         
-        nrecs = nrecs + 1
+        nrecs += 1
         # We just save the first 100 chars, the rest is padding (could be used)
-        savstring = line[0:100]
+        l = len(line)
+        if (l > LRECL):
+            l = LRECL
+      
+        savestring = line[0:l]
+        if (l < LRECL):
+            savstring = line.ljust(LRECL,' ');
+        #print(" length of new string = ",len(savstring))
         #barray = bytes(savstring, 'utf-8')
         barray = savstring.encode('utf-8')
-        buffer[0:100] = barray
+        buffer[0:LRECL] = barray
         
         #if nrecs < 2:
         #    print(" debug buffer: ",buffer[0:20])
@@ -160,7 +165,7 @@ def Process_this_file(outfile, infile, registered_voters):
             outstr = line[0:val3]
             outfile.write(outstr)
             outfile.write("\n")
-            nrecs = nrecs + 1
+            nrecs += 1
         else:
             print(" id not found: ",vidstr)
             

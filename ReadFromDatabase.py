@@ -1,3 +1,4 @@
+from logging import exception
 from Block_IO import Block_IO
 import sys
 import time
@@ -75,7 +76,12 @@ def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
         string_parts1 = parts[fld_sosid].replace('"','')
         idnumber = int(string_parts0)
 
-        result = registered_voters[idnumber]
+        if idnumber in registered_voters.keys():
+            result = registered_voters[idnumber]
+        else:
+            print(" voter ID ",idnumber," not in dictionary...skipping")
+            continue
+        
         print(" found dictionary entry for id ",idnumber, " sosid",result[0]," block ",result[1]," offset",result[2])
         record = bio.read_spcific_record(result[1],result[2],LRECL)
         
@@ -97,6 +103,9 @@ data_location = "c:/tmp/"
 keyfile = "searchkeys.txt"
 
 key_file_path_name = data_location + keyfile
+
+#DEBUG only
+bio.debug_read_records()
 
 registered_voters = {}
 
