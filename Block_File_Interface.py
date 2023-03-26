@@ -6,7 +6,7 @@ class Block_File_Interface(object):
     def __init__(self):
         self.blocks_written = 0
         self.blocks_read = 0
-        self.blocks_replaced = 0
+        self.blocks_replaced = 0    # DF: Currently unused?
         self.outfile = None
         self.infile = None
         self.isopen_read = False
@@ -39,13 +39,14 @@ class Block_File_Interface(object):
 #----------------------------------------------------------------------------------
 
     def close_file(self):
-        if (self.isopen_read):
-            self.infile.close()
-            return(0)
         if (self.isopen_write):
             self.outfile.close()
-            nb = self.blocks_written
-        return(nb)
+            self.isopen_write = False
+            return self.blocks_written
+        if (self.isopen_read):
+            self.infile.close()
+            self.isopen_read = False
+        return 0
 #----------------------------------------------------------------------------------
 
     def write_block(self,buffer):
@@ -61,7 +62,7 @@ class Block_File_Interface(object):
             buffer = self.infile.read(self.BLOCKSIZE)
         except IOError:
             print(" could not read from file")
-        self.blocks_read = self.blocks_read + 1
+        self.blocks_read += 1
         return buffer
 
     def read_required_block(self,blocknum):

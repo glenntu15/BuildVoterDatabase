@@ -10,20 +10,17 @@ buffer = bytearray(4096)
 
 def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
 
-    
-
     splitchar = ','
     fld_voterid = 1
     fld_sosid = 2
 
-    
    
     # try reading the first data record
-    #record = bio.read_spcific_record(0,0,LRECL)
+    #record = bio.read_specific_record(0,0,LRECL)
     idnumber = 41926668
     result = registered_voters[idnumber]
     print(" found dictionary entry for id ",idnumber, " sosid",result[0]," block ",result[1]," offset",result[2])
-    record = bio.read_spcific_record(result[1],result[2],LRECL)
+    record = bio.read_specific_record(result[1],result[2],LRECL)
     testdata = record[0:100]
     sdata = testdata.decode("'utf-8'")
     print(" debug first entry: ",sdata)
@@ -31,7 +28,7 @@ def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
     idnumber = 36531523
     result = registered_voters[idnumber]
     print(" found dictionary entry for id ",idnumber, " sosid",result[0]," block ",result[1]," offset",result[2])
-    record = bio.read_spcific_record(result[1],result[2],LRECL)
+    record = bio.read_specific_record(result[1],result[2],LRECL)
     testdata = record[0:100]
     sdata = testdata.decode("'utf-8'")
     print(" debug 20th entry: ",sdata)
@@ -39,7 +36,7 @@ def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
     idnumber =80109549
     result = registered_voters[idnumber]
     print(" found dictionary entry for id ",idnumber, " sosid",result[0]," block ",result[1]," offset",result[2])
-    record = bio.read_spcific_record(result[1],result[2],LRECL)
+    record = bio.read_specific_record(result[1],result[2],LRECL)
     testdata = record[0:100]
     sdata = testdata.decode("'utf-8'")
     print(" debug 33rd entry: ",sdata)
@@ -61,14 +58,14 @@ def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
 
     while True:
 
-        line = infile.readline();
+        line = infile.readline()
         if not line:
             #print(" end of file, nrecs ",nrecs,"last record ",string_parts0)
             break
         #if (l > LRECL):
-        #    print(" record is too long, record is: ",line);
+        #    print(" record is too long, record is: ",line)
 
-        nrecs = nrecs + 1
+        nrecs += 1
         
         parts = line.split(splitchar)
         
@@ -83,7 +80,7 @@ def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
             continue
         
         print(" found dictionary entry for id ",idnumber, " sosid",result[0]," block ",result[1]," offset",result[2])
-        record = bio.read_spcific_record(result[1],result[2],LRECL)
+        record = bio.read_specific_record(result[1],result[2],LRECL)
         
         testdata = record[0:100]
         sdata = testdata.decode("'utf-8'")
@@ -99,7 +96,7 @@ bio = Block_IO()            # can only be one instance of bio
 
 dbfile = "database.bin"
 
-data_location = "c:/tmp/"
+data_location = "C:\\Users\\dfern\\OneDrive\\Documents\\UH\\Senior\\Spring2023\\COSC6376\\code\\tmp\\"
 keyfile = "searchkeys.txt"
 
 key_file_path_name = data_location + keyfile

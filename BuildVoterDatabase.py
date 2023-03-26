@@ -43,7 +43,7 @@ def Build_Dictionary(file_path_name, voter_dictionary):
         #if (nrecs > REGISTERED_VOTERS_TO_PROCESS ):
         #    break
         ## end debug
-        line = infile.readline();
+        line = infile.readline()
         if not line:
             #print(" end of file, nrecs ",nrecs,"last record ",string_parts0)
             break
@@ -51,9 +51,9 @@ def Build_Dictionary(file_path_name, voter_dictionary):
         if (l > maxreclen):
             maxreclen = l
         #if (l > LRECL):
-        #    print(" record is too long, record is: ",line);
+        #    print(" record is too long, record is: ",line)
 
-        nrecs = nrecs + 1
+        nrecs += 1
         
         parts = line.split(splitchar)
         
@@ -77,15 +77,17 @@ def Build_Dictionary(file_path_name, voter_dictionary):
             voter_dictionary[idnumber] = (sosid, buffer_num, offset)
             #if (buffer_num > 0):
                 #print("***************** sosid ", sosid,"buffer ", buffer_num,"offset ", offset)
-            offset = offset + LRECL
+            offset += LRECL
             if (offset >= BLOCKSIZE):
-                buffer_num = buffer_num + 1
+                buffer_num += 1
                 offset = 0
-            #
+                
+            # DF: Missing code?
 
+    print("voter_dict:", voter_dictionary)
 
     infile.close()
-    return(nrecs,maxreclen)
+    return (nrecs,maxreclen)
 
 #----------------------------------------------------------------------------------
 # This function is called to build the database of registered voters
@@ -105,7 +107,7 @@ def build_database(file_path_name,blbuilder):
     nrecs = 0
     while True:
 
-        line = infile.readline();
+        line = infile.readline()
         if not line:
             break
         
@@ -117,10 +119,10 @@ def build_database(file_path_name,blbuilder):
       
         savestring = line[0:l]
         if (l < LRECL):
-            savstring = line.ljust(LRECL,' ');
+            savestring = line.ljust(LRECL,' ')
         #print(" length of new string = ",len(savstring))
         #barray = bytes(savstring, 'utf-8')
-        barray = savstring.encode('utf-8')
+        barray = savestring.encode('utf-8')
         buffer[0:LRECL] = barray
         
         #if nrecs < 2:
@@ -149,7 +151,7 @@ def Process_this_file(outfile, infile, registered_voters):
         #if (nrecs >= 19):
         #    break
         ## end debug
-        line = infile.readline();
+        line = infile.readline()
         if not line:
             break
         l = len(line)
@@ -221,8 +223,6 @@ def process_voters(datalocation, registered_voters):
 #----------------------------------------------------------------------------------
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        
-#
 #----------------------------------------------------------------------------------
 #  *** Main Starts Here ***
 #----------------------------------------------------------------------------------
@@ -236,17 +236,17 @@ nrecs = 0
 maxlrecl = 0
 
 #registered_filename = "HARRIS COUNTY.csv"
-dataLocation = "C:/tmp/"
+dataLocation = "C:\\Users\\dfern\\OneDrive\\Documents\\UH\\Senior\\Spring2023\\COSC6376\\code\\tmp\\"
 #file_path_name = dataLocation + registered_filename
 
 # range may be up to 5, the first 4 files are 500000 records each
-for i in range(1):              
+for i in range(1):
     #file_path_name = dataLocation + "registered_voters" + str(i) + ".csv"
     file_path_name = dataLocation + "test_file" + str(i) + ".csv"
-    result = Build_Dictionary(file_path_name, registered_voters)
-    nrecs = nrecs + result[0];
-    if (result[1] > maxlrecl):
-        maxrecl = result[1]
+    _nrecs, _maxrecl = Build_Dictionary(file_path_name, registered_voters)
+    nrecs += _nrecs
+    if (_maxrecl > maxlrecl):
+        maxrecl = _maxrecl
 
 print("finished, nrecs, lrecs: ",nrecs,maxrecl)
 #print(" sanity check")
