@@ -1,19 +1,22 @@
-from logging import exception
-from Block_IO import Block_IO
-import sys
+from logging import exception   # DF: What's this?
 import time
+import sys
+from Block_IO import Block_IO
+from Config import Configurations
+from UsefulFunctions import error_print
 
-BLOCKSIZE=4096
-LRECL = 128
+BLOCKSIZE = Configurations.BLOCKSIZE
+LRECL = Configurations.LRECL
 
-buffer = bytearray(4096) 
+buffer = bytearray(4096)
 
 def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
 
-    splitchar = ','
+    splitchar = ',' if Configurations.DATA_FORMAT == "csv" else " "
     fld_voterid = 1
     fld_sosid = 2
-
+    # DF: Can be determined by the index of `voterid` & `sosid` in Configurations.DATA_ATTRIBUTES:
+    # DF: Also: Configurations.DATA_ATTRIBUTES should correspond to the resulting split/decode of data
    
     # try reading the first data record
     #record = bio.read_specific_record(0,0,LRECL)
@@ -51,8 +54,7 @@ def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
     try:
         infile = open(key_file_path_name, 'r')
     except IOError:
-        print(" could not open file")
-        exit(1)
+        error_print(f"could not open {key_file_path_name}")
 
     nrecs = 0
 
@@ -70,7 +72,7 @@ def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
         parts = line.split(splitchar)
         
         string_parts0 = parts[fld_voterid].replace('"','')
-        string_parts1 = parts[fld_sosid].replace('"','')
+        string_parts1 = parts[fld_sosid].replace('"','')    # DF: Unused?
         idnumber = int(string_parts0)
 
         if idnumber in registered_voters.keys():
@@ -82,44 +84,50 @@ def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
         print(" found dictionary entry for id ",idnumber, " sosid",result[0]," block ",result[1]," offset",result[2])
         record = bio.read_specific_record(result[1],result[2],LRECL)
         
+        # DF: Should this 100 be part of the Configurations ?
         testdata = record[0:100]
         sdata = testdata.decode("'utf-8'")
         print(sdata)
 
+        # DF: Should this 3 be in Configurations somehow, maybe as the len() of a list in Configurations ?
         if (nrecs > 3):
             break
+
 #----------------------------------------------------------------------------------
 # Main starts here
 #----------------------------------------------------------------------------------
+def main(args):
+    Configurations.initialize_default()
+    # Congurations.initialize( ... args )
+    
+    bio = Block_IO()            # can only be one instance of bio
 
-bio = Block_IO()            # can only be one instance of bio
+    dbfile = "database.bin"
+    keyfile = "searchkeys.txt"
+    key_file_path_name = Configurations.DATA_PATH + keyfile
 
-dbfile = "database.bin"
+    #DEBUG only
+    bio.debug_read_records()
 
-data_location = "C:\\Users\\dfern\\OneDrive\\Documents\\UH\\Senior\\Spring2023\\COSC6376\\code\\tmp\\"
-keyfile = "searchkeys.txt"
+    registered_voters = {}
 
-key_file_path_name = data_location + keyfile
-
-#DEBUG only
-bio.debug_read_records()
-
-registered_voters = {}
-
-t1 = time.process_time()
-bio.build_dictionary_from_file(dbfile, registered_voters)
-t2 = time.process_time()
-print(" time to build dictionary from file: ",(t2-t1))
+    t1 = time.process_time()
+    bio.build_dictionary_from_file(dbfile, registered_voters)
+    t2 = time.process_time()
+    print(" time to build dictionary from file: ",(t2-t1))
 
 
-print(" dictionary of registered voters length = ",len(registered_voters))
-print(" blocks read: ",bio.return_block_count())
+    print(" dictionary of registered voters length = ",len(registered_voters))
+    print(" blocks read: ",bio.return_block_count())
 
-#count = 0
-#for vid, result in registered_voters.items():
-#    print(" vid: ", vid, " result",result)
-#    count = count + 1
-#    if (count > 10):
-#        break
+    #count = 0
+    #for vid, result in registered_voters.items():
+    #    print(" vid: ", vid, " result",result)
+    #    count = count + 1
+    #    if (count > 10):
+    #        break
 
-Find_Records_From_Keys(bio, registered_voters, key_file_path_name)
+    Find_Records_From_Keys(bio, registered_voters, key_file_path_name)
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

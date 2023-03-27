@@ -2,9 +2,10 @@
 from Block_File_Interface import Block_File_Interface 
 import sys
 import math
+from Config import Configurations
 
-BLOCKSIZE=4096
-DICTIONARY_RECL = 16
+BLOCKSIZE = Configurations.BLOCKSIZE
+DICTIONARY_RECL = Configurations.DRECL
 
 class Block_IO():
     buffer = bytearray(BLOCKSIZE)
@@ -94,6 +95,8 @@ class Block_IO():
         calculated_n = math.ceil(calculated_n)
         print(" based on this the calculated number of blocks is: ",calculated_n)
 
+        # DF: Should these 3 words be part of Configurations somehow ?
+        # DF:   - So that this (4, +4, +8, etc.) are not hardcoded below
         # The first three words of the buffer (fourth is not used to make entryies the same length)
         # are: number of dictionary entries, size of each entry, number of blocks used for dictionary
         bufferpos = 0
@@ -107,7 +110,7 @@ class Block_IO():
         bytes_val = calculated_n.to_bytes(4,sys.byteorder)
         self.buffer[bufferpos+8:bufferpos+12] = bytes_val
 
-        bufferpos = bufferpos + entry_length
+        bufferpos += entry_length
 
        
         #print(" retrieved number of entries as bytes: ",bytes_val)
@@ -151,7 +154,7 @@ class Block_IO():
             #    print("key = ",key)
             bufferpos += entry_length
                                          
-           #buffer[bufferpos:bufferpos+lenint] = offset.to_bytes(lint,sys.byteorder)
+            #buffer[bufferpos:bufferpos+lenint] = offset.to_bytes(lint,sys.byteorder)
             
             if (bufferpos >= BLOCKSIZE):
                 self.bs.write_block(self.buffer)

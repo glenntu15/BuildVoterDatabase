@@ -1,24 +1,29 @@
-from Block_IO import Block_IO
 import time
+import sys
+from Block_IO import Block_IO
+from Config import Configurations
+from UsefulFunctions import error_print
 #from Block_File_Interface import Block_File_Interface
 
-BLOCKSIZE=4096
-LRECL = 128   # Logical RECord Length (as opposed to physical records)
-DICTIONARY_RECL = 16
-REGISTERED_VOTERS_TO_PROCESS = 500000
+BLOCKSIZE = Configurations.BLOCKSIZE
+LRECL = Configurations.LRECL   # Logical RECord Length (as opposed to physical records)
+DICTIONARY_RECL = Configurations.DRECL
+REGISTERED_VOTERS_TO_PROCESS = Configurations.VOTERS_TO_PROC
 
 #----------------------------------------------------------------------------------
-def WriteRecord(record):
+def write_record(record):
     print(" record:", record)
 
 #----------------------------------------------------------------------------------
 # Build a dictionary of voters by ID,
-def Build_Dictionary(file_path_name, voter_dictionary):
+def build_dictionary(file_path_name, voter_dictionary):
 
     # adjust these for different data files
-    splitchar = ','
+    splitchar = ',' if Configurations.DATA_FORMAT == "csv" else " "
     fld_voterid = 1
     fld_sosid = 2
+    # DF: Can be determined by the index of `voterid` & `sosid` in Configurations.DATA_ATTRIBUTES
+    # DF: Also: Configurations.DATA_ATTRIBUTES should correspond to the resulting split/decode of data
 
     # initialize counters
     nrecs = 0
@@ -32,8 +37,7 @@ def Build_Dictionary(file_path_name, voter_dictionary):
     try:
         infile = open(file_path_name, 'r')
     except IOError:
-        print(" could not open file")
-        exit(1)
+        error_print(f"could not open {file_path_name}")
 
        # skip the header line on the original file -- not on these
        #line = infile.readline()
@@ -61,7 +65,7 @@ def Build_Dictionary(file_path_name, voter_dictionary):
         string_parts1 = parts[fld_sosid].replace('"','')
 
 
-        if (len(string_parts1) < 2):
+        if (len(string_parts1) < 2):    # DF: What is this for ?
             sosid = 0
             print(" no sOS ID for voter id: ",string_parts0)
         else:
@@ -82,8 +86,6 @@ def Build_Dictionary(file_path_name, voter_dictionary):
                 buffer_num += 1
                 offset = 0
                 
-            # DF: Missing code?
-
     print("voter_dict:", voter_dictionary)
 
     infile.close()
@@ -99,8 +101,7 @@ def build_database(file_path_name,blbuilder):
     try:
         infile = open(file_path_name, 'r')
     except IOError:
-        print(" could not open file")
-        exit(1)
+        error_print(f"could not open {file_path_name}")
 
     # skip the header line -- no header file in split data
     #line = infile.readline()
@@ -139,7 +140,7 @@ def build_database(file_path_name,blbuilder):
 # This first function actually does the work of reading the input file and writing appending to an output file.
 # This file will be used to query the database and assure the keys are retrieved in the same order each time.
 # This funciton is passed two open file handles and the dictionary.  Voters not in the dictionary of registered voters are not saved
-def Process_this_file(outfile, infile, registered_voters):
+def process_this_file(outfile, infile, registered_voters):
     print("processing file")
     nrecs = 0
 
@@ -192,8 +193,7 @@ def process_voters(datalocation, registered_voters):
     try:
         outfile = open(outfile_path_name, 'w')
     except IOError:
-        print(" could not open file")
-        exit(1)
+        error_print(f"could not open `{outfile_path_name}`")
 
 
     # we may use several input files
@@ -202,9 +202,8 @@ def process_voters(datalocation, registered_voters):
     try:
         infile = open(file_path_name, 'r')
     except IOError:
-        print(" could not open file")
-        exit(1)
-    nrecs = Process_this_file(outfile, infile, registered_voters)
+        error_print(f"could not open `{file_path_name}`")
+    nrecs = process_this_file(outfile, infile, registered_voters)
     infile.close()
 
     file = "VoterRoster - ELECTION DAY ONLY_1121_2.csv"
@@ -213,9 +212,8 @@ def process_voters(datalocation, registered_voters):
     try:
         infile = open(file_path_name, 'r')
     except IOError:
-        print(" could not open file")
-        exit(1)
-    nrecs = nrecs + Process_this_file(outfile, infile, registered_voters)
+        error_print(f"could not open `{file_path_name}`")
+    nrecs += process_this_file(outfile, infile, registered_voters)
     infile.close()
 
     outfile.close()
@@ -228,57 +226,63 @@ def process_voters(datalocation, registered_voters):
 #----------------------------------------------------------------------------------
 
 # Only create one instance of the block IO class -- its not a singleton
-blbuilder = Block_IO()
+def main(args):
+    Configurations.initialize_default()
+    # Congurations.initialize( ... args )
 
-registered_voters = {}
+    blbuilder = Block_IO()
 
-nrecs = 0
-maxlrecl = 0
+    registered_voters = {}
 
-#registered_filename = "HARRIS COUNTY.csv"
-dataLocation = "C:\\Users\\dfern\\OneDrive\\Documents\\UH\\Senior\\Spring2023\\COSC6376\\code\\tmp\\"
-#file_path_name = dataLocation + registered_filename
+    nrecs = 0
+    maxlrecl = 0
 
-# range may be up to 5, the first 4 files are 500000 records each
-for i in range(1):
-    #file_path_name = dataLocation + "registered_voters" + str(i) + ".csv"
-    file_path_name = dataLocation + "test_file" + str(i) + ".csv"
-    _nrecs, _maxrecl = Build_Dictionary(file_path_name, registered_voters)
-    nrecs += _nrecs
-    if (_maxrecl > maxlrecl):
-        maxrecl = _maxrecl
+    #registered_filename = "HARRIS COUNTY.csv"
+    dataLocation = Configurations.DATA_PATH
+    #file_path_name = dataLocation + registered_filename
 
-print("finished, nrecs, lrecs: ",nrecs,maxrecl)
-#print(" sanity check")
+    # DF: Should this range number be in the Configuration file ?
+    # range may be up to 5, the first 4 files are 500000 records each
+    for i in range(1):
+        #file_path_name = dataLocation + "registered_voters" + str(i) + ".csv"
+        file_path_name = dataLocation + "test_file" + str(i) + ".csv"
+        _nrecs, _maxrecl = build_dictionary(file_path_name, registered_voters)
+        nrecs += _nrecs
+        if (_maxrecl > maxlrecl):
+            maxrecl = _maxrecl
 
-print(" blocks so far... ",blbuilder.return_block_count())
+    print("finished, nrecs, lrecs: ",nrecs,maxrecl)
+    #print(" sanity check")
 
-##########
-# Uncomment this section to rebuild the key file
-#
-# This section is just to build a list of keys in a file
-#nrecs = process_voters(dataLocation, registered_voters)
-#print(" nrecs = ",nrecs)
-#########
+    print(" blocks so far... ",blbuilder.return_block_count())
 
-blbuilder.set_output_file("database.bin")
-t1 = time.process_time()
-blbuilder.write_dictionary(registered_voters)
-t2 = time.process_time()
-print(" print time to write dictionary: ",(t2-t1))
-t1 = time.process_time()
+    ##########
+    # Uncomment this section to rebuild the key file
+    #
+    # This section is just to build a list of keys in a file
+    #nrecs = process_voters(dataLocation, registered_voters)
+    #print(" nrecs = ",nrecs)
+    #########
 
-for i in range(1):              
-    #file_path_name = dataLocation + "registered_voters" + str(i) + ".csv"
-    file_path_name = dataLocation + "test_file" + str(i) + ".csv"
+    blbuilder.set_output_file("database.bin")
+    t1 = time.process_time()
+    blbuilder.write_dictionary(registered_voters)
+    t2 = time.process_time()
+    print(" print time to write dictionary: ",(t2-t1))
+    t1 = time.process_time()
 
-    build_database(file_path_name,blbuilder)
+    for i in range(1):              
+        #file_path_name = dataLocation + "registered_voters" + str(i) + ".csv"
+        file_path_name = dataLocation + "test_file" + str(i) + ".csv"
 
-t2 = time.process_time()
-print(" print time to build database: ",(t2-t1))
+        build_database(file_path_name,blbuilder)
+
+    t2 = time.process_time()
+    print(" print time to build database: ",(t2-t1))
 
 
+    print(" Total blocks written: ",blbuilder.close_output_file())
 
 
-print(" Total blocks written: ",blbuilder.close_output_file())
-
+if __name__ == "__main__":
+    main(sys.argv[1:])

@@ -1,5 +1,4 @@
-
-
+from UsefulFunctions import error_print
 
 class Block_File_Interface(object):
     BLOCKSIZE = 4096
@@ -22,8 +21,7 @@ class Block_File_Interface(object):
         try:
             self.outfile = open(filename, 'wb')
         except IOError:
-            print(" could not open file")
-            exit(1)
+            error_print(f"could not open {filename}")
         self.isopen_write = True
         self.blocks_written = 0
 #----------------------------------------------------------------------------------
@@ -33,8 +31,7 @@ class Block_File_Interface(object):
         try:
             self.infile = open(filename, 'rb')
         except IOError:
-            print(" could not open file")
-            exit(1)
+            error_print(f"could not open {filename}")
         self.isopen_read = True
 #----------------------------------------------------------------------------------
 
@@ -61,7 +58,7 @@ class Block_File_Interface(object):
         try:
             buffer = self.infile.read(self.BLOCKSIZE)
         except IOError:
-            print(" could not read from file")
+            print(" could not read from file") # Df: Should this be an `error_print` ? ( exit(1) )
         self.blocks_read += 1
         return buffer
 
