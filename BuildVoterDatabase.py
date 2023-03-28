@@ -39,8 +39,8 @@ def build_dictionary(file_path_name, voter_dictionary):
     except IOError:
         error_print(f"could not open {file_path_name}")
 
-       # skip the header line on the original file -- not on these
-       #line = infile.readline()
+    # skip the header line on the original file -- not on these
+    line = infile.readline()
     while True:
 
         ## debug 500000 records
@@ -86,7 +86,7 @@ def build_dictionary(file_path_name, voter_dictionary):
                 buffer_num += 1
                 offset = 0
                 
-    print("voter_dict:", voter_dictionary)
+    #print("voter_dict:", voter_dictionary)
 
     infile.close()
     return (nrecs,maxreclen)
@@ -104,7 +104,7 @@ def build_database(file_path_name,blbuilder):
         error_print(f"could not open {file_path_name}")
 
     # skip the header line -- no header file in split data
-    #line = infile.readline()
+    line = infile.readline()
     nrecs = 0
     while True:
 
@@ -244,8 +244,8 @@ def main(args):
     # DF: Should this range number be in the Configuration file ?
     # range may be up to 5, the first 4 files are 500000 records each
     for i in range(1):
-        #file_path_name = dataLocation + "registered_voters" + str(i) + ".csv"
-        file_path_name = dataLocation + "test_file" + str(i) + ".csv"
+        file_path_name = dataLocation + "registered_voters" + str(i) + ".csv"
+        #file_path_name = dataLocation + "test_file" + str(i) + ".csv"
         _nrecs, _maxrecl = build_dictionary(file_path_name, registered_voters)
         nrecs += _nrecs
         if (_maxrecl > maxlrecl):
@@ -279,7 +279,6 @@ def main(args):
 
     t2 = time.process_time()
     print(" print time to build database: ",(t2-t1))
-
 
     print(" Total blocks written: ",blbuilder.close_output_file())
 
