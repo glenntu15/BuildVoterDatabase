@@ -206,15 +206,16 @@ def process_voters(datalocation, registered_voters):
     nrecs = process_this_file(outfile, infile, registered_voters)
     infile.close()
 
-    file = "VoterRoster - ELECTION DAY ONLY_1121_2.csv"
-    file_path_name = datalocation + file
+    for i in range(1,3):
+        file = "VoterRoster - ELECTION DAY ONLY_1121_" + str(i) + ".csv"
+        file_path_name = datalocation + file
 
-    try:
-        infile = open(file_path_name, 'r')
-    except IOError:
-        error_print(f"could not open `{file_path_name}`")
-    nrecs += process_this_file(outfile, infile, registered_voters)
-    infile.close()
+        try:
+            infile = open(file_path_name, 'r')
+        except IOError:
+            error_print(f"could not open `{file_path_name}`")
+        nrecs += process_this_file(outfile, infile, registered_voters)
+        infile.close()
 
     outfile.close()
     return (nrecs)
@@ -243,15 +244,17 @@ def main(args):
 
     # DF: Should this range number be in the Configuration file ?
     # range may be up to 5, the first 4 files are 500000 records each
-    for i in range(1):
-        file_path_name = dataLocation + "registered_voters" + str(i) + ".csv"
+    t1 = time.process_time()
+    for i in range(5):
+        file_path_name = dataLocation +  Configurations.DATA_FILE_NAME_ROOT + str(i) + ".csv"
         #file_path_name = dataLocation + "test_file" + str(i) + ".csv"
         _nrecs, _maxrecl = build_dictionary(file_path_name, registered_voters)
         nrecs += _nrecs
         if (_maxrecl > maxlrecl):
             maxrecl = _maxrecl
-
+    t2 = time.process_time()
     print("finished, nrecs, lrecs: ",nrecs,maxrecl)
+    print(" time to build dictionary: ",(t2-t1))
     #print(" sanity check")
 
     print(" blocks so far... ",blbuilder.return_block_count())
@@ -271,9 +274,9 @@ def main(args):
     print(" print time to write dictionary: ",(t2-t1))
     t1 = time.process_time()
 
-    for i in range(1):              
-        #file_path_name = dataLocation + "registered_voters" + str(i) + ".csv"
-        file_path_name = dataLocation + "test_file" + str(i) + ".csv"
+    for i in range(5):              
+        file_path_name = dataLocation + Configurations.DATA_FILE_NAME_ROOT + str(i) + ".csv"
+        #file_path_name = dataLocation + "test_file" + str(i) + ".csv"
 
         build_database(file_path_name,blbuilder)
 
