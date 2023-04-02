@@ -5,7 +5,9 @@ class Block_File_Interface(object):
     def __init__(self):
         self.blocks_written = 0
         self.blocks_read = 0
-        self.blocks_replaced = 0    # DF: Currently unused?
+        self.blocks_replaced = 0    # DF: Currently unused? GAT -- will try to replace records sometime
+        self.number_of_seeks = 0
+        self.total_seek_length_blocks = 0
         self.outfile = None
         self.infile = None
         self.isopen_read = False
@@ -48,7 +50,7 @@ class Block_File_Interface(object):
 
     def write_block(self,buffer):
         self.outfile.write(buffer)
-        print(" debug bytes written ",len(buffer))
+        #print(" debug bytes written ",len(buffer))
         self.blocks_written += 1
         # progress report
         #if (self.blocks_written % 500) == 0:
@@ -65,6 +67,8 @@ class Block_File_Interface(object):
     def read_required_block(self,blocknum):
         file_offset = (self.directory_block_offset + blocknum) * self.BLOCKSIZE # offset in bytes
         self.infile.seek(file_offset,0)
+        self.number_of_seeks += 1
+        self.total_seek_length_blocks += file_offset  # could try to make seek length shorter
         #print(" reading block: ",(self.directory_block_offset + blocknum)," offset in file ",file_offset," tell: ",self.infile.tell())
         buffer = self.infile.read(4096)
         #print(" buffer length after read: ",len(buffer))
