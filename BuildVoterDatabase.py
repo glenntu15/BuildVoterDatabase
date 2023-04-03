@@ -263,8 +263,8 @@ def main(args):
     # Uncomment this section to rebuild the key file
     #
     # This section is just to build a list of keys in a file
-    nrecs = process_voters(dataLocation, registered_voters)
-    print(" nrecs = ",nrecs)
+    #nrecs = process_voters(dataLocation, registered_voters)
+    #print(" nrecs = ",nrecs)
     #########
 
     blbuilder.set_output_file("database.bin")
