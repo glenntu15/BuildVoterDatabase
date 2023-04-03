@@ -140,17 +140,18 @@ def build_database(file_path_name,blbuilder):
 # This first function actually does the work of reading the input file and writing appending to an output file.
 # This file will be used to query the database and assure the keys are retrieved in the same order each time.
 # This funciton is passed two open file handles and the dictionary.  Voters not in the dictionary of registered voters are not saved
-def process_this_file(outfile, infile, registered_voters):
+def process_this_file(outfile, infile, registered_voters, nalready):
     print("processing file")
     nrecs = 0
+    number_not_found = 0
 
     # skip the header line
     line = infile.readline()
     while True:
 
         ## debug 10 records
-        #if (nrecs >= 19):
-        #    break
+        if (nrecs+nalready >= 200000):
+            break
         ## end debug
         line = infile.readline()
         if not line:
@@ -170,10 +171,13 @@ def process_this_file(outfile, infile, registered_voters):
             outfile.write("\n")
             nrecs += 1
         else:
-            print(" id not found: ",vidstr)
+            number_not_found += 1;
+
+        #    print(" id not found: ",vidstr)
             
     infile.close()
     # The Sosid is preserved so as to check that the record retireved is the one searched for
+    print(" number not found in this file: ",number_not_found)
     return nrecs
 
 #..................................................................................
@@ -187,7 +191,9 @@ def process_voters(datalocation, registered_voters):
     file_path_name = datalocation + file
     
     nrecs = 0
-
+    files_to_use = ["VoterRoster - ELECTION DAY ONLY_1121_1.csv", "VoterRoster - ELECTION DAY ONLY_1121_2.csv", 
+                    "Cumulative_BBM_1121.csv", "Cumulative_EV_1121_10-29-21.csv", "Cumulative_EV_1121_10-28-21.csv",
+                    "Cumulative_EV_1121_10-27-21.csv", "Cumulative_EV_1121_10-26-21.csv"]
     # open output file
     print(" Opening file: ",outfile_path_name)
     try:
@@ -198,25 +204,19 @@ def process_voters(datalocation, registered_voters):
 
     # we may use several input files
 
-    print(" Opening file: ",file_path_name)
-    try:
-        infile = open(file_path_name, 'r')
-    except IOError:
-        error_print(f"could not open `{file_path_name}`")
-    nrecs = process_this_file(outfile, infile, registered_voters)
-    infile.close()
+    nrecs = 0
 
-    for i in range(1,3):
-        file = "VoterRoster - ELECTION DAY ONLY_1121_" + str(i) + ".csv"
+    for file in files_to_use:
+        
         file_path_name = datalocation + file
-
+        print(" Opening file: ",file_path_name)
         try:
             infile = open(file_path_name, 'r')
         except IOError:
             error_print(f"could not open `{file_path_name}`")
-        nrecs += process_this_file(outfile, infile, registered_voters)
+        nrecs += process_this_file(outfile, infile, registered_voters, nrecs)
         infile.close()
-
+        #print(" debug nrecs = ",nrecs)
     outfile.close()
     return (nrecs)
 #----------------------------------------------------------------------------------
@@ -263,8 +263,8 @@ def main(args):
     # Uncomment this section to rebuild the key file
     #
     # This section is just to build a list of keys in a file
-    #nrecs = process_voters(dataLocation, registered_voters)
-    #print(" nrecs = ",nrecs)
+    nrecs = process_voters(dataLocation, registered_voters)
+    print(" nrecs = ",nrecs)
     #########
 
     blbuilder.set_output_file("database.bin")
