@@ -16,7 +16,7 @@ def write_record(record):
 
 #----------------------------------------------------------------------------------
 # Build a dictionary of voters by ID,
-def build_dictionary(file_path_name, voter_dictionary):
+def build_dictionary(file_path_name, voter_dictionary, buffer_num, offset):
 
     # adjust these for different data files
     splitchar = ',' if Configurations.DATA_FORMAT == "csv" else " "
@@ -29,8 +29,7 @@ def build_dictionary(file_path_name, voter_dictionary):
     nrecs = 0
     maxreclen = 0
     # we precalulate the block number and offset where the record will be stored the next pass through
-    buffer_num = 0
-    offset = 0
+    
     
  
     print(" Opening file: ",file_path_name)
@@ -80,7 +79,7 @@ def build_dictionary(file_path_name, voter_dictionary):
             
             voter_dictionary[idnumber] = (sosid, buffer_num, offset)
             #if (buffer_num > 0):
-                #print("***************** sosid ", sosid,"buffer ", buffer_num,"offset ", offset)
+            #print("*********",idnumber," sosid ", sosid,"buffer ", buffer_num,"offset ", offset)
             offset += LRECL
             if (offset >= BLOCKSIZE):
                 buffer_num += 1
@@ -89,7 +88,7 @@ def build_dictionary(file_path_name, voter_dictionary):
     #print("voter_dict:", voter_dictionary)
 
     infile.close()
-    return (nrecs,maxreclen)
+    return (nrecs,maxreclen,buffer_num,offset)
 
 #----------------------------------------------------------------------------------
 # This function is called to build the database of registered voters
@@ -98,6 +97,7 @@ def build_database(file_path_name,blbuilder):
     buffer = bytearray(LRECL)
     
     print(" Building database...Opening file: ",file_path_name)
+    print(" blocks so far... ",blbuilder.return_block_count())
     try:
         infile = open(file_path_name, 'r')
     except IOError:
@@ -244,12 +244,17 @@ def main(args):
 
     # DF: Should this range number be in the Configuration file ?
     # range may be up to 5, the first 4 files are 500000 records each
+
+
     t1 = time.process_time()
+    buffer_num = 0
+    offset = 0
     for i in range(5):
         file_path_name = dataLocation +  Configurations.DATA_FILE_NAME_ROOT + str(i) + ".csv"
         #file_path_name = dataLocation + "test_file" + str(i) + ".csv"
-        _nrecs, _maxrecl = build_dictionary(file_path_name, registered_voters)
+        _nrecs, _maxrecl, buffer_num, offset = build_dictionary(file_path_name, registered_voters, buffer_num, offset)
         nrecs += _nrecs
+        print(" debug buf num, and offset ",buffer_num,offset)
         if (_maxrecl > maxlrecl):
             maxrecl = _maxrecl
     t2 = time.process_time()
