@@ -8,6 +8,10 @@ BLOCKSIZE = Configurations.BLOCKSIZE
 DICTIONARY_RECL = Configurations.DRECL
 
 class Block_IO():
+
+    #
+    # This class maintains the buffer and decides if it is current or another one needs to be written
+    #
     buffer = bytearray(BLOCKSIZE)
     bs = Block_File_Interface()
 
@@ -16,6 +20,12 @@ class Block_IO():
         self.have_opened_storage = False
         #self.blocks_written = 0
         self.bufferpos = BLOCKSIZE # force the initial reading of a block
+#----------------------------------------------------------------------------------
+    def get_block_file_stats(self):
+        nbread = self.bs.blocks_read
+        nseeks = self.bs.number_of_seeks
+        nseekblocks = self.bs.total_seek_length_blocks
+        return (nbread, nseeks, nseekblocks)
 #----------------------------------------------------------------------------------
 
     def return_block_count(self):
@@ -49,7 +59,7 @@ class Block_IO():
 
         self.buffer[self.bufferpos:self.bufferpos+length] = record
         self.bufferpos += length
-
+# This is called to read the next record -- used in building dictionary from file
     def read_record_from_block(self,length:int):
         if (self.bufferpos + length) > BLOCKSIZE:
             self.buffer = self.bs.read_block()
@@ -202,6 +212,7 @@ class Block_IO():
             bytes_val = record_buffer[bufferpos:bufferpos+4]
             key = int.from_bytes(bytes_val,sys.byteorder)
             
+            
             bytes_val = record_buffer[bufferpos+4:bufferpos+8]
             value[0] = int.from_bytes(bytes_val,sys.byteorder)
 
@@ -210,7 +221,8 @@ class Block_IO():
 
             bytes_val = record_buffer[bufferpos+12:bufferpos+16]
             value[2] = int.from_bytes(bytes_val,sys.byteorder)
-
+            #if key == 80799695:
+            #    print(" debug key in dict: ",key, " val1 ", value[1])
             #if (i < 9):
             #    print("key",key," value stored: ",value[0], value[1], value[2])
             #    print(" buffer record written: ",self.buffer[bufferpos:bufferpos+16])

@@ -8,6 +8,7 @@ class Block_File_Interface(object):
         self.blocks_replaced = 0    # DF: Currently unused? GAT -- will try to replace records sometime
         self.number_of_seeks = 0
         self.total_seek_length_blocks = 0
+        self.current_block = -1         # block that is read last -- in memory 
         self.outfile = None
         self.infile = None
         self.isopen_read = False
@@ -65,12 +66,14 @@ class Block_File_Interface(object):
         return buffer
 
     def read_required_block(self,blocknum):
-        file_offset = (self.directory_block_offset + blocknum) * self.BLOCKSIZE # offset in bytes
+        block_offset = self.directory_block_offset + blocknum
+        file_offset =  block_offset * self.BLOCKSIZE # offset in bytes
         self.infile.seek(file_offset,0)
         self.number_of_seeks += 1
-        self.total_seek_length_blocks += file_offset  # could try to make seek length shorter
+        self.total_seek_length_blocks += block_offset  # could try to make seek length shorter
         #print(" reading block: ",(self.directory_block_offset + blocknum)," offset in file ",file_offset," tell: ",self.infile.tell())
         buffer = self.infile.read(4096)
+        self.blocks_read += 1
         #print(" buffer length after read: ",len(buffer))
         #print(" after seek and read buffer: ",buffer[0:64])
         return buffer
