@@ -97,7 +97,7 @@ def build_database(file_path_name,blbuilder):
     buffer = bytearray(LRECL)
     
     print(" Building database...Opening file: ",file_path_name)
-    print(" blocks so far... ",blbuilder.return_block_count())
+    #print(" blocks so far... ",blbuilder.return_block_count())
     try:
         infile = open(file_path_name, 'r')
     except IOError:
@@ -254,13 +254,12 @@ def main(args):
         #file_path_name = dataLocation + "test_file" + str(i) + ".csv"
         _nrecs, _maxrecl, buffer_num, offset = build_dictionary(file_path_name, registered_voters, buffer_num, offset)
         nrecs += _nrecs
-        print(" debug buf num, and offset ",buffer_num,offset)
+        #print(" debug buf num, and offset ",buffer_num,offset)
         if (_maxrecl > maxlrecl):
             maxrecl = _maxrecl
     t2 = time.process_time()
-    print("finished, nrecs, lrecs: ",nrecs,maxrecl)
-    print(" time to build dictionary: ",(t2-t1))
-    #print(" sanity check")
+    print("finished, nrecs: ",nrecs, "max record length: ",nrecs,maxrecl)
+    print(" ====> time to build dictionary: ",(t2-t1))
 
     print(" blocks so far... ",blbuilder.return_block_count())
 
@@ -276,7 +275,7 @@ def main(args):
     t1 = time.process_time()
     blbuilder.write_dictionary(registered_voters)
     t2 = time.process_time()
-    print(" print time to write dictionary: ",(t2-t1))
+    print(" ====>time to write dictionary: ",(t2-t1))
     t1 = time.process_time()
 
     for i in range(5):              
@@ -286,7 +285,7 @@ def main(args):
         build_database(file_path_name,blbuilder)
 
     t2 = time.process_time()
-    print(" print time to build database: ",(t2-t1))
+    print(" ====> time to build database: ",(t2-t1))
 
     print(" Total blocks written: ",blbuilder.close_output_file())
 
