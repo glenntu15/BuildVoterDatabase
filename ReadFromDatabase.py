@@ -96,8 +96,19 @@ def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
         
         record = bio.read_specific_record(result[1],result[2],LRECL)
         if (nrecs % 1000 == 0):
-            print(" found dictionary entry for id ",idnumber, " sosid",result[0]," block ",result[1]," offset",result[2])
-            print(" record from key: ", record)
+            #print(" found dictionary entry for id ",idnumber, " sosid",result[0]," block ",result[1]," offset",result[2])
+            #print(" record from key: ", record)
+            # check for correct record
+
+            testdata = record[0:100]
+            sdata = testdata.decode("'utf-8'")
+            parts = sdata.split(splitchar)
+            string_parts0 = parts[fld_voterid].replace('"','')
+            idtocheck = int(string_parts0)
+            if idnumber != idtocheck:
+                print(" error retrieving record with id ",idnumber)
+
+
         
         # DF: Should this 100 be part of the Configurations ?
         #testdata = record[0:100]
@@ -129,7 +140,7 @@ def main(args):
     t1 = time.process_time()
     bio.build_dictionary_from_file(dbfile, registered_voters)
     t2 = time.process_time()
-    print(" time to build dictionary from file: ",(t2-t1))
+    print(" ====> time to build dictionary from file: ",(t2-t1))
 
 
     print(" dictionary of registered voters length = ",len(registered_voters))
@@ -142,7 +153,17 @@ def main(args):
     #    if (count > 10):
     #        break
 
+    t1 = time.process_time()
     Find_Records_From_Keys(bio, registered_voters, key_file_path_name)
+    t2 = time.process_time()
+    print(" ====> time to process records: ",(t2-t1))
+
+    result = bio.get_block_file_stats()
+    print(" blocks read: ",result[0]," number of seeks ",result[1], " total blocks in seek: ",result[2])
+    print(" average seek length ",(result[2]/result[1]))
+       # nbread = bs.blocks_read
+       # nseeks = bs.number_of_seeks
+       # nseekblocks = bs.total_seek_length_blocks
 
 if __name__ == "__main__":
     main(sys.argv[1:])
