@@ -12,6 +12,9 @@ class DefaultConfigurations:
     DATA_FORMAT = "csv"
     DATA_ATTRIBUTES = ["placeholder"]   # DF: Add header here
     DATA_FILE_NAME_ROOT = "registered_voters" # Might also be "test_file"
+    optimize_reads = False
+    DATABASE_PATH = "./"
+    DATABASE_NAME ="database.bin"
 
 class Configurations:
     BLOCKSIZE = DefaultConfigurations.BLOCKSIZE
@@ -22,6 +25,9 @@ class Configurations:
     DATA_PATH = DefaultConfigurations.DATA_PATH
     DATA_FORMAT = DefaultConfigurations.DATA_FORMAT
     DATA_ATTRIBUTES = DefaultConfigurations.DATA_ATTRIBUTES
+    DATABASE_PATH = DefaultConfigurations.DATABASE_PATH
+    DATABASE_NAME = DefaultConfigurations.DATABASE_NAME
+    optimize_reads = DefaultConfigurations.optimize_reads
     
     _CONFIGURABLES = [i for i in dir(DefaultConfigurations) if i[0].isupper()]
 
@@ -34,10 +40,14 @@ class Configurations:
         Configurations.DATA_FORMAT = DefaultConfigurations.DATA_FORMAT
         Configurations.DATA_ATTRIBUTES = DefaultConfigurations.DATA_ATTRIBUTES
         Configurations.DATA_FILE_NAME_ROOT = DefaultConfigurations.DATA_FILE_NAME_ROOT
+        Configurations.DATABASE_PATH = DefaultConfigurations.DATABASE_PATH
+       
+        Configurations.optimize_reads = False
         Configurations.verify()
 
     def initialize(blocksize = None, lrecl = None, dict_recl = None, voters_to_proc = None,
-                   data_path = None, data_format = None, data_header = None, data_file_name_root = None):
+                   data_path = None, data_format = None, data_header = None, data_file_name_root = None, 
+                   database_path = None, opt_reads = None):
         Configurations.BLOCKSIZE = blocksize if blocksize is not None else DefaultConfigurations.BLOCKSIZE
         Configurations.LRECL = lrecl if lrecl is not None else DefaultConfigurations.LRECL
         Configurations.DRECL = dict_recl if dict_recl is not None else DefaultConfigurations.DRECL
@@ -46,6 +56,10 @@ class Configurations:
         Configurations.DATA_FORMAT = data_format if data_format is not None else DefaultConfigurations.DATA_FORMAT
         Configurations.DATA_ATTRIBUTES = data_header if data_header is not None else DefaultConfigurations.DATA_ATTRIBUTES
         Configurations.DATA_FILE_NAME_ROOT = data_file_name_root if data_file_name_root is not None else DefaultConfigurations.DATA_FILE_NAME_ROOT
+        Configurations.DATABASE_PATH = database_path if database_path is not None else DefaultConfigurations.DATABASE_PATH
+
+        Configurations.optimize_reads = opt_reads if opt_reads is not None else DefaultConfigurations.opt_reads
+
         Configurations.verify()
 
     def initialize_sizes(blocksize, lrecl, dict_recl):
