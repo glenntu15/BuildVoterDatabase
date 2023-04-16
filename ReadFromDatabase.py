@@ -8,9 +8,9 @@ from UsefulFunctions import error_print
 BLOCKSIZE = Configurations.BLOCKSIZE
 LRECL = Configurations.LRECL
 
-buffer = bytearray(4096)
+buffer = bytearray(BLOCKSIZE)
 
-def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
+def Find_Records_From_Keys(bio, registered_voters,key_file_path_name, key_list = None):
 
     splitchar = ',' if Configurations.DATA_FORMAT == "csv" else " "
     fld_voterid = 1
@@ -28,18 +28,19 @@ def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
     #sdata = testdata.decode("'utf-8'")
     #print(" debug first entry: ",sdata)
     # now try the 20 th record
-    
+   
 
     #testdata = record[0:100]
     #print(" debug testdata: ",testdata[0:20])
     #sdata = testdata.decode("'utf-8'")
     #print(sdata)
 
-    print(" Opening file: ",key_file_path_name)
-    try:
-        infile = open(key_file_path_name, 'r')
-    except IOError:
-        error_print(f"could not open {key_file_path_name}")
+    if key_list is None:
+        print(" Opening file: ",key_file_path_name)
+        try:
+            infile = open(key_file_path_name, 'r')
+        except IOError:
+            error_print(f"could not open {key_file_path_name}")
     """
     idnumber = 87015467
     result = registered_voters[idnumber]
@@ -70,22 +71,29 @@ def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
 
     while True:
 
-        line = infile.readline()
-        if not line:
-            #print(" end of file, nrecs ",nrecs,"last record ",string_parts0)
-            break
-        #if (l > LRECL):
-        #    print(" record is too long, record is: ",line)
+        if key_list is None:
+            line = infile.readline()
+            if not line:
+                #print(" end of file, nrecs ",nrecs,"last record ",string_parts0)
+                break
+            #if (l > LRECL):
+            #    print(" record is too long, record is: ",line)
+
+           
+        
+            parts = line.split(splitchar)
+        
+            string_parts0 = parts[fld_voterid].replace('"','')
+            #string_parts1 = parts[fld_sosid].replace('"','')    # DF: Unused? GT - yep
+            idnumber = int(string_parts0)
+            if idnumber in registered_voters.keys():
+                result = registered_voters[idnumber]
+        else:
+            idnumber = key_list[nrecs]
+
+        # now process this id
 
         nrecs += 1
-        
-        parts = line.split(splitchar)
-        
-        string_parts0 = parts[fld_voterid].replace('"','')
-        string_parts1 = parts[fld_sosid].replace('"','')    # DF: Unused?
-        idnumber = int(string_parts0)
-        if idnumber in registered_voters.keys():
-            result = registered_voters[idnumber]
 
         if idnumber in registered_voters.keys():
             result = registered_voters[idnumber]
@@ -124,11 +132,13 @@ def Find_Records_From_Keys(bio, registered_voters,key_file_path_name):
 #----------------------------------------------------------------------------------
 def main(args):
     Configurations.initialize_default()
-    # Congurations.initialize( ... args )
+    if len(args) > 0:
+        if args[0] == "-or":
+            Configurations.initialize(opt_reads = True)
     
     bio = Block_IO()            # can only be one instance of bio
 
-    dbfile = "database.bin"
+    dbfile = Configurations.DATABASE_PATH + Configurations.DATABASE_NAME
     keyfile = "searchkeys.txt"
     key_file_path_name = Configurations.DATA_PATH + keyfile
 
@@ -160,7 +170,7 @@ def main(args):
 
     result = bio.get_block_file_stats()
     print(" blocks read: ",result[0]," number of seeks ",result[1], " total blocks in seek: ",result[2])
-    print(" average seek length ",(result[2]/result[1]))
+    print(" average seek length ",(result[2]/result[1])," blocks ", (result[2]/result[1]) * BLOCKSIZE, "bytes")
        # nbread = bs.blocks_read
        # nseeks = bs.number_of_seeks
        # nseekblocks = bs.total_seek_length_blocks
