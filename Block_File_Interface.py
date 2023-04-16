@@ -1,14 +1,14 @@
 from UsefulFunctions import error_print
+from Config import Configurations
 
 class Block_File_Interface(object):
-    BLOCKSIZE = 4096
+    BLOCKSIZE = Configurations.BLOCKSIZE
     def __init__(self):
         self.blocks_written = 0
         self.blocks_read = 0
         self.blocks_replaced = 0    # DF: Currently unused? GAT -- will try to replace records sometime
         self.number_of_seeks = 0
         self.total_seek_length_blocks = 0
-        self.current_block = -1         # block that is read last -- in memory 
         self.outfile = None
         self.infile = None
         self.isopen_read = False
@@ -72,14 +72,11 @@ class Block_File_Interface(object):
         self.number_of_seeks += 1
         self.total_seek_length_blocks += block_offset  # could try to make seek length shorter
         #print(" reading block: ",(self.directory_block_offset + blocknum)," offset in file ",file_offset," tell: ",self.infile.tell())
-        buffer = self.infile.read(4096)
+        buffer = self.infile.read(self.BLOCKSIZE)
         self.blocks_read += 1
         #print(" buffer length after read: ",len(buffer))
         #print(" after seek and read buffer: ",buffer[0:64])
         return buffer
-
-#----------------------------------------------------------------------------------
-    
 
 
 

@@ -6,6 +6,8 @@ from Config import Configurations
 
 BLOCKSIZE = Configurations.BLOCKSIZE
 DICTIONARY_RECL = Configurations.DRECL
+optimize_reads = Configurations.optimize_reads
+# for some reason is True and optimize_reads is false after this statement
 
 class Block_IO():
 
@@ -14,12 +16,15 @@ class Block_IO():
     #
     buffer = bytearray(BLOCKSIZE)
     bs = Block_File_Interface()
+    
 
     def __init__(self):
 
         self.have_opened_storage = False
         #self.blocks_written = 0
         self.bufferpos = BLOCKSIZE # force the initial reading of a block
+        self.current_block = -1    # this is the block num (not counting directory blocks) held in the buffer
+        self.optimize_reads = Configurations.optimize_reads
 #----------------------------------------------------------------------------------
     def get_block_file_stats(self):
         nbread = self.bs.blocks_read
@@ -59,10 +64,12 @@ class Block_IO():
 
         self.buffer[self.bufferpos:self.bufferpos+length] = record
         self.bufferpos += length
+
+#----------------------------------------------------------------------------------
 # This is called to read the next record -- used in building dictionary from file
     def read_record_from_block(self,length:int):
         if (self.bufferpos + length) > BLOCKSIZE:
-            self.buffer = self.bs.read_block()
+            self.buffer = self.bs.read_block()  # note this does not set current block
             #print(" block read ",self.buffer[0:16])
             #print(" block read ",self.buffer[16:32])
             self.bufferpos = 0
@@ -70,9 +77,20 @@ class Block_IO():
         #print(" record as read",record)
         self.bufferpos += length
         return record
-
+#----------------------------------------------------------------------------------
     def read_specific_record(self,blocknum,offset,length):
-        self.buffer = self.bs.read_required_block(blocknum)
+        #
+        if  not self.optimize_reads or self.current_block != blocknum:
+             self.buffer = self.bs.read_required_block(blocknum)
+        # dbugging-----
+        #if Configurations.optimize_reads:
+            
+         #   if blocknum == self.current_block:
+         #       print(" no need to seek")
+        #----- end debug
+
+        #self.buffer = self.bs.read_required_block(blocknum)
+        self.current_block = blocknum
         #print(" block read ",self.buffer[0:32])
         self.bufferpos = offset
         record = self.buffer[self.bufferpos:self.bufferpos+length]
@@ -93,7 +111,6 @@ class Block_IO():
     def write_dictionary(self,entry_dictionary):
 
         entry_length = DICTIONARY_RECL # 16 bytes per dictionary entry into the buffer
-        #buffer = bytearray(4096)  # Use BLOCKSIZE here
        
         print(" byte order: ",sys.byteorder)
         n = len(entry_dictionary)
@@ -227,10 +244,11 @@ class Block_IO():
             #    print("key",key," value stored: ",value[0], value[1], value[2])
             #    print(" buffer record written: ",self.buffer[bufferpos:bufferpos+16])
                 
-            # for debugging:
+            #  just checking for dupes 
             if (key in registered_voters):
                 print("*** ERROR duplicate key: ",key,"for i = ",i," nblocks = ",self.return_block_count())
                 print(" block entry ",value[1],' offset: ',value[2])
+
             registered_voters[key] = (value[0],value[1],value[2])
         
   
