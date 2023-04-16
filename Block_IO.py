@@ -118,7 +118,7 @@ class Block_IO():
 
         # Sanity check: see if actual number of blocks is the expected number
         records_per_buffer = BLOCKSIZE / entry_length
-        calculated_n = n / records_per_buffer          # DF: Where is the sanity check?
+        calculated_n = n / records_per_buffer          # DF: Where is the sanity check? -- see if blocks written is same as calculated
         calculated_n = math.ceil(calculated_n)
         print(" based on this the calculated number of blocks is: ",calculated_n)
 
@@ -127,15 +127,18 @@ class Block_IO():
         # The first three words of the buffer (fourth is not used to make entryies the same length)
         # are: number of dictionary entries, size of each entry, number of blocks used for dictionary
         bufferpos = 0
-        bytes_val = n.to_bytes(4,sys.byteorder)
+        bytes_val = n.to_bytes(4,sys.byteorder)   # number of dictionary entries
         #print(" number of entries as bytes: ",bytes_val)
         self.buffer[bufferpos:bufferpos+4] = bytes_val
 
-        bytes_val = entry_length.to_bytes(4,sys.byteorder)
+        bytes_val = entry_length.to_bytes(4,sys.byteorder) # dict entry length
         self.buffer[bufferpos+4:bufferpos+8] = bytes_val
         
-        bytes_val = calculated_n.to_bytes(4,sys.byteorder)
+        bytes_val = calculated_n.to_bytes(4,sys.byteorder) # number of blocks
         self.buffer[bufferpos+8:bufferpos+12] = bytes_val
+
+        bytes_val = BLOCKSIZE.to_bytes(4,sys.byteorder) # when reading check to see if blocksize is same as when written
+        self.buffer[bufferpos+12:bufferpos+16] = bytes_val
 
         bufferpos += entry_length
 

@@ -231,6 +231,7 @@ def main(args):
     Configurations.initialize_default()
     # Congurations.initialize( ... args )
 
+    print(" blocksize is set to: ",Configurations.BLOCKSIZE)
     blbuilder = Block_IO()
 
     registered_voters = {}
@@ -258,10 +259,10 @@ def main(args):
         if (_maxrecl > maxlrecl):
             maxrecl = _maxrecl
     t2 = time.process_time()
-    print("finished, nrecs: ",nrecs, "max record length: ",nrecs,maxrecl)
+    print(" nrecs: ",nrecs, "max record length: ",nrecs,maxrecl)
     print(" ====> time to build dictionary: ",(t2-t1))
 
-    print(" blocks so far... ",blbuilder.return_block_count())
+    #print(" blocks so far... ",blbuilder.return_block_count())
 
     ##########
     # Uncomment this section to rebuild the key file
