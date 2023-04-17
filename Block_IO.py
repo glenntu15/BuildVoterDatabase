@@ -212,15 +212,18 @@ class Block_IO():
         n = 0
         #  number of dictionary entries, size of each entry, number of blocks used for dictionary
         bytes_val = record_buffer[bufferpos:bufferpos+4]
-        ll = len(bytes_val)
-        #print("bytes: ",bytes_val)
-        n = int.from_bytes(bytes_val,sys.byteorder)
+        n = int.from_bytes(bytes_val,sys.byteorder) 
         
         bytes_val = record_buffer[bufferpos+4:bufferpos+8]
         entry_length = int.from_bytes(bytes_val,sys.byteorder)
+
         bytes_val = record_buffer[bufferpos+8:bufferpos+12]
         nblocks_to_expect = int.from_bytes(bytes_val,sys.byteorder)
-        print(" n(retrieved) = ",n," entry_length ",entry_length," nblocks ",nblocks_to_expect)
+
+        bytes_val = record_buffer[bufferpos+12:bufferpos+16]
+        block_size_as_built = int.from_bytes(bytes_val,sys.byteorder)
+
+        print(" number of dictionary entries = ",n," entry_length ",entry_length," nblocks ",nblocks_to_expect, " Blocksize of DB: ",block_size_as_built)
         # set this for later
         self.bs.directory_block_offset = nblocks_to_expect
         
@@ -231,8 +234,7 @@ class Block_IO():
 
             bytes_val = record_buffer[bufferpos:bufferpos+4]
             key = int.from_bytes(bytes_val,sys.byteorder)
-            
-            
+                      
             bytes_val = record_buffer[bufferpos+4:bufferpos+8]
             value[0] = int.from_bytes(bytes_val,sys.byteorder)
 

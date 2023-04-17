@@ -135,6 +135,7 @@ def main(args):
     if len(args) > 0:
         if args[0] == "-or":
             Configurations.initialize(opt_reads = True)
+            print(" ** Read optimization is turned on (don't re-read blocks)")
     
     bio = Block_IO()            # can only be one instance of bio
 
