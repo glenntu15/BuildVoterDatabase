@@ -150,7 +150,7 @@ def process_this_file(outfile, infile, registered_voters, nalready):
     while True:
 
         ## debug 10 records
-        if (nrecs+nalready >= 200000):
+        if (nrecs+nalready >= 215000):
             break
         ## end debug
         line = infile.readline()
@@ -193,7 +193,9 @@ def process_voters(datalocation, registered_voters):
     nrecs = 0
     files_to_use = ["VoterRoster - ELECTION DAY ONLY_1121_1.csv", "VoterRoster - ELECTION DAY ONLY_1121_2.csv", 
                     "Cumulative_BBM_1121.csv", "Cumulative_EV_1121_10-29-21.csv", "Cumulative_EV_1121_10-28-21.csv",
-                    "Cumulative_EV_1121_10-27-21.csv", "Cumulative_EV_1121_10-26-21.csv"]
+                    "Cumulative_EV_1121_10-27-21.csv", "Cumulative_EV_1121_10-26-21.csv",
+                    "Cumulative_EV_1121_10-25-21.csv", "Cumulative_EV_1121_10-24-21.csv",
+                    "Cumulative_EV_1121_10-22-21.csv", "Cumulative_EV_1121_10-23-21.csv"]
     # open output file
     print(" Opening file: ",outfile_path_name)
     try:
@@ -230,8 +232,9 @@ def process_voters(datalocation, registered_voters):
 def main(args):
     Configurations.initialize_default()
     # Congurations.initialize( ... args )
-
-    print(" blocksize is set to: ",Configurations.BLOCKSIZE)
+    print("*************************************************")
+    print(" Blocksize is set to: ",Configurations.BLOCKSIZE)
+    print("*************************************************\n")
     blbuilder = Block_IO()
 
     registered_voters = {}
