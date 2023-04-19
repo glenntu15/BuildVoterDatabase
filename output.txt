@@ -1,0 +1,37 @@
+ubuntu@ip-172-31-34-107:~$ python3 BuildVoterDatabase.py
+*************************************************
+ Blocksize is set to:  512
+*************************************************
+
+ Opening file:  /data/registered_voters0.csv
+ Opening file:  /data/registered_voters1.csv
+ Opening file:  /data/registered_voters2.csv
+ Opening file:  /data/registered_voters3.csv
+ Opening file:  /data/registered_voters4.csv
+ nrecs:  2487525 max record length:  2487525 132
+ ====> time to build dictionary:  5.334727635999999
+ Opening file:  /data/database.bin
+ byte order:  little
+ number of dictionary entries =  2487525
+ based on this the calculated number of blocks is:  77736
+ ====>time to write dictionary:  5.173272412999999
+ Building database...Opening file:  /data/registered_voters0.csv
+ Building database...Opening file:  /data/registered_voters1.csv
+ Building database...Opening file:  /data/registered_voters2.csv
+ Building database...Opening file:  /data/registered_voters3.csv
+ Building database...Opening file:  /data/registered_voters4.csv
+ ====> time to build database:  5.036027966000001
+ Total blocks written:  699617
+
+ubuntu@ip-172-31-34-107:~$ python3 ReadFromDatabase.py
+ dbfile:  /data/database.bin
+ Opening file:  /data/database.bin
+ number of dictionary entries =  2487525  entry_length  16  nblocks  77736  Blocksize of DB:  512
+ ====> time to build dictionary from file:  6.1149946900000005
+ dictionary of registered voters length =  2487525
+ blocks read for dictionary:  77736
+ Opening file:  /data/searchkeys.txt
+ ====> time to process records:  6.3109881539999995
+ blocks read:  292736  number of seeks  215000  total blocks in seek:  83739520479
+ average seek length  389486.1417627907  blocks  199416904.58254883 bytes
+ubuntu@ip-172-31-34-107:~$ 
