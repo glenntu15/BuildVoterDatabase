@@ -275,7 +275,8 @@ def main(args):
     #print(" nrecs = ",nrecs)
     #########
 
-    blbuilder.set_output_file("database.bin")
+    dbfile = Configurations.DATABASE_PATH + Configurations.DATABASE_NAME
+    blbuilder.set_output_file(dbfile)
     t1 = time.process_time()
     blbuilder.write_dictionary(registered_voters)
     t2 = time.process_time()
