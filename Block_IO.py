@@ -96,15 +96,15 @@ class Block_IO():
         record = self.buffer[self.bufferpos:self.bufferpos+length]
         return record
 #----------------------------------------------------------------------------------
-    def debug_read_records(self):
-        self.bs.open_for_read("database.bin")
-        self.buffer = self.bs.read_block()
-        print(" block: 1 ",self.buffer[0:36])
-        self.buffer = self.bs.read_block()
-        print(" block: 2 ",self.buffer[0:36])
-        self.buffer = self.bs.read_block()
-        print(" block: 3 ",self.buffer[0:36])
-        self.bs.close_file()
+   # def debug_read_records(self):
+   #     self.bs.open_for_read("database.bin")
+   #     self.buffer = self.bs.read_block()
+   #     print(" block: 1 ",self.buffer[0:36])
+   #     self.buffer = self.bs.read_block()
+   #     print(" block: 2 ",self.buffer[0:36])
+   #     self.buffer = self.bs.read_block()
+   #     print(" block: 3 ",self.buffer[0:36])
+   #     self.bs.close_file()
 #----------------------------------------------------------------------------------
 
 
