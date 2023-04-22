@@ -5,7 +5,7 @@ class DefaultConfigurations:
 
     VOTERS_TO_PROC = 500000
     
-    #DATA_PATH = "C:\\Users\\dfern\\OneDrive\\Documents\\UH\\Senior\\Spring2023\\COSC6376\\code\\tmp\\"
+    # DATA_PATH = "C:\\Users\\dfern\\OneDrive\\Documents\\UH\\Senior\\Spring2023\\COSC6376\\code\\tmp\\"
     DATA_PATH = "C:/tmp/"
     DATA_FORMAT = "csv"
     DATA_ATTRIBUTES = ["placeholder"]   # DF: Add header here

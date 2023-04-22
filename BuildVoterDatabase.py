@@ -285,14 +285,13 @@ def main(args):
     blbuilder.write_dictionary(registered_voters)
     t2 = time.process_time()
     print(" ====>time to write dictionary: ", (t2-t1))
-    t1 = time.process_time()
 
+    t1 = time.process_time()
     for i in range(5):              
         file_path_name = dataLocation + Configurations.DATA_FILE_NAME_ROOT + str(i) + ".csv"
         #file_path_name = dataLocation + "test_file" + str(i) + ".csv"
 
         build_database(file_path_name,blbuilder)
-
     t2 = time.process_time()
     print(" ====> time to build database: ", (t2-t1))
 
