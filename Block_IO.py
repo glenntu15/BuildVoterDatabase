@@ -26,7 +26,7 @@ class Block_IO():
         self.optimize_reads = Configurations.optimize_reads
 
 #----------------------------------------------------------------------------------
-    ## 3 ref: build_dictionary_from_file(), BuildVoterDatabase, ReadFromDatabase
+    ## 3 ref: `build_dictionary_from_file()`, BuildVoterDatabase, ReadFromDatabase
     def return_block_count(self):
         if self.bs.isopen_read:
             return self.bs.blocks_read
@@ -56,7 +56,7 @@ class Block_IO():
         self.bufferpos += length
     
     #----------------------------------------------------------------------------------
-    ## 1 ref: write_dictionary()
+    ## 1 ref: `write_dictionary()`
     def clear_last_block(self):
         # write out last block and reset bufferpos
         # print(" clear last block: len is ", len(self.buffer))

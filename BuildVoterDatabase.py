@@ -11,11 +11,13 @@ DICTIONARY_RECL = Configurations.DRECL
 REGISTERED_VOTERS_TO_PROCESS = Configurations.VOTERS_TO_PROC
 
 #----------------------------------------------------------------------------------
-def write_record(record):
-    print(" record:", record)
+## 0 ref:
+# def write_record(record):
+#     print(" record:", record)
 
 #----------------------------------------------------------------------------------
-# Build a dictionary of voters by ID,
+## 1 ref: `main()`
+# Builds dictionary of voters by ID,
 def build_dictionary(file_path_name, voter_dictionary, buffer_num, offset):
 
     # adjust these for different data files
@@ -31,8 +33,7 @@ def build_dictionary(file_path_name, voter_dictionary, buffer_num, offset):
     # we precalulate the block number and offset where the record will be stored the next pass through
     
     
- 
-    print(" Opening file: ",file_path_name)
+    print(" Opening file: ", file_path_name)
     try:
         infile = open(file_path_name, 'r')
     except IOError:
@@ -43,32 +44,32 @@ def build_dictionary(file_path_name, voter_dictionary, buffer_num, offset):
     while True:
 
         ## debug 500000 records
-        #if (nrecs > REGISTERED_VOTERS_TO_PROCESS ):
+        # if (nrecs > REGISTERED_VOTERS_TO_PROCESS ):
         #    break
         ## end debug
         line = infile.readline()
         if not line:
-            #print(" end of file, nrecs ",nrecs,"last record ",string_parts0)
+            # print(" end of file, nrecs ", nrecs, "last record ", string_parts0)
             break
         l = len(line)
         if (l > maxreclen):
             maxreclen = l
-        #if (l > LRECL):
-        #    print(" record is too long, record is: ",line)
+        # if (l > LRECL):
+        #    print(" record is too long, record is: ", line)
 
         nrecs += 1
         
         parts = line.split(splitchar)
         
-        string_parts0 = parts[fld_voterid].replace('"','')
-        string_parts1 = parts[fld_sosid].replace('"','')
+        string_parts0 = parts[fld_voterid].replace('"', '')
+        string_parts1 = parts[fld_sosid].replace('"', '')
 
 
         if (len(string_parts1) < 2):    # DF: What is this for ?
             sosid = 0
             print(" no sOS ID for voter id: ",string_parts0)
         else:
-            sosid = int(string_parts1)            #Sectretery of state ID
+            sosid = int(string_parts1)            # Sectretery of state ID
         idnumber = int(string_parts0)
 
         if idnumber in voter_dictionary:
@@ -78,26 +79,27 @@ def build_dictionary(file_path_name, voter_dictionary, buffer_num, offset):
         else:
             
             voter_dictionary[idnumber] = (sosid, buffer_num, offset)
-            #if (buffer_num > 0):
-            #print("*********",idnumber," sosid ", sosid,"buffer ", buffer_num,"offset ", offset)
+            # if (buffer_num > 0):
+            # print("*********", idnumber, " sosid ", sosid, "buffer ", buffer_num, "offset ", offset)
             offset += LRECL
             if (offset >= BLOCKSIZE):
                 buffer_num += 1
                 offset = 0
                 
-    #print("voter_dict:", voter_dictionary)
+    # print("voter_dict:", voter_dictionary)
 
     infile.close()
-    return (nrecs,maxreclen,buffer_num,offset)
+    return (nrecs, maxreclen, buffer_num, offset)
 
 #----------------------------------------------------------------------------------
 # This function is called to build the database of registered voters
-def build_database(file_path_name,blbuilder):
+## 1 ref: `main()`
+def build_database(file_path_name, blbuilder):
 
     buffer = bytearray(LRECL)
     
-    print(" Building database...Opening file: ",file_path_name)
-    #print(" blocks so far... ",blbuilder.return_block_count())
+    print(" Building database...Opening file: ", file_path_name)
+    # print(" blocks so far... ", blbuilder.return_block_count())
     try:
         infile = open(file_path_name, 'r')
     except IOError:
@@ -121,25 +123,27 @@ def build_database(file_path_name,blbuilder):
         savestring = line[0:l]
         if (l < LRECL):
             savestring = line.ljust(LRECL,' ')
-        #print(" length of new string = ",len(savstring))
-        #barray = bytes(savstring, 'utf-8')
+        # print(" length of new string = ", len(savstring))
+        # barray = bytes(savstring, 'utf-8')
         barray = savestring.encode('utf-8')
         buffer[0:LRECL] = barray
         
-        #if nrecs < 2:
-        #    print(" debug buffer: ",buffer[0:20])
+        # if nrecs < 2:
+        #    print(" debug buffer: ", buffer[0:20])
         #    newstring = buffer.decode('utf-8')
-        #    print(" decoded string: ",newstring)
+        #    print(" decoded string: ", newstring)
 
-        blbuilder.write_record_to_block(buffer,LRECL)
+        blbuilder.write_record_to_block(buffer, LRECL)
 
 #----------------------------------------------------------------------------------
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+'''
 # These next two functions are only called to build a list of keys to be searched for, they are actual voters on election day 2021
 # This first function actually does the work of reading the input file and writing appending to an output file.
 # This file will be used to query the database and assure the keys are retrieved in the same order each time.
-# This funciton is passed two open file handles and the dictionary.  Voters not in the dictionary of registered voters are not saved
+# This function is passed two open file handles and the dictionary.  Voters not in the dictionary of registered voters are not saved
+'''
+## 1 ref: `process_voters()`
 def process_this_file(outfile, infile, registered_voters, nalready):
     print("processing file")
     nrecs = 0
@@ -150,7 +154,7 @@ def process_this_file(outfile, infile, registered_voters, nalready):
     while True:
 
         ## debug 10 records
-        if (nrecs+nalready >= 215000):
+        if nrecs+nalready >= 215000:
             break
         ## end debug
         line = infile.readline()
@@ -159,30 +163,32 @@ def process_this_file(outfile, infile, registered_voters, nalready):
         l = len(line)
         val = 0
         val = line.find(",") # first comma
-        val2 = line.find(",",val+1,l) # second comma
+        val2 = line.find(",", val+1, l) # second comma
         vidstr = line[val+1:val2]
         idnumber = int(vidstr)
         if idnumber in registered_voters:
         # look for the third comma
 
-            val3 = line.find(",",val2+1,l)
+            val3 = line.find(",", val2+1, l)
             outstr = line[0:val3]
             outfile.write(outstr)
             outfile.write("\n")
             nrecs += 1
         else:
-            number_not_found += 1;
+            number_not_found += 1
 
         #    print(" id not found: ",vidstr)
             
     infile.close()
     # The Sosid is preserved so as to check that the record retireved is the one searched for
-    print(" number not found in this file: ",number_not_found)
+    print(" number not found in this file: ", number_not_found)
     return nrecs
 
-#..................................................................................
-#  This is the driver function called to build a list of keys to search for in the database
-#  Several files may be used to build a big list of keys
+'''
+# Driver function to build a list of keys to search for in the database
+# Note: Several files may be used to build this key file
+'''
+## 1 ref: `main()`
 def process_voters(datalocation, registered_voters):
 
     outfile = "searchkeys.txt"
@@ -197,7 +203,7 @@ def process_voters(datalocation, registered_voters):
                     "Cumulative_EV_1121_10-25-21.csv", "Cumulative_EV_1121_10-24-21.csv",
                     "Cumulative_EV_1121_10-22-21.csv", "Cumulative_EV_1121_10-23-21.csv"]
     # open output file
-    print(" Opening file: ",outfile_path_name)
+    print(" Opening file: ", outfile_path_name)
     try:
         outfile = open(outfile_path_name, 'w')
     except IOError:
@@ -211,7 +217,7 @@ def process_voters(datalocation, registered_voters):
     for file in files_to_use:
         
         file_path_name = datalocation + file
-        print(" Opening file: ",file_path_name)
+        print(" Opening file: ", file_path_name)
         try:
             infile = open(file_path_name, 'r')
         except IOError:
@@ -233,7 +239,7 @@ def main(args):
     Configurations.initialize_default()
     # Congurations.initialize( ... args )
     print("*************************************************")
-    print(" Blocksize is set to: ",Configurations.BLOCKSIZE)
+    print(" Blocksize is set to: ", Configurations.BLOCKSIZE)
     print("*************************************************\n")
     blbuilder = Block_IO()
 
@@ -242,9 +248,9 @@ def main(args):
     nrecs = 0
     maxlrecl = 0
 
-    #registered_filename = "HARRIS COUNTY.csv"
+    # registered_filename = "HARRIS COUNTY.csv"
     dataLocation = Configurations.DATA_PATH
-    #file_path_name = dataLocation + registered_filename
+    # file_path_name = dataLocation + registered_filename
 
     # DF: Should this range number be in the Configuration file ?
     # range may be up to 5, the first 4 files are 500000 records each
@@ -254,7 +260,7 @@ def main(args):
     buffer_num = 0
     offset = 0
     for i in range(5):
-        file_path_name = dataLocation +  Configurations.DATA_FILE_NAME_ROOT + str(i) + ".csv"
+        file_path_name = dataLocation + Configurations.DATA_FILE_NAME_ROOT + str(i) + ".csv"
         #file_path_name = dataLocation + "test_file" + str(i) + ".csv"
         _nrecs, _maxrecl, buffer_num, offset = build_dictionary(file_path_name, registered_voters, buffer_num, offset)
         nrecs += _nrecs
@@ -262,17 +268,15 @@ def main(args):
         if (_maxrecl > maxlrecl):
             maxrecl = _maxrecl
     t2 = time.process_time()
-    print(" nrecs: ",nrecs, "max record length: ",nrecs,maxrecl)
-    print(" ====> time to build dictionary: ",(t2-t1))
+    print(" nrecs: ", nrecs, "max record length: ", nrecs, maxrecl)
+    print(" ====> time to build dictionary: ", (t2-t1))
 
-    #print(" blocks so far... ",blbuilder.return_block_count())
+    # print(" blocks so far... ", blbuilder.return_block_count())
 
     ##########
-    # Uncomment this section to rebuild the key file
-    #
-    # This section is just to build a list of keys in a file
-    #nrecs = process_voters(dataLocation, registered_voters)
-    #print(" nrecs = ",nrecs)
+    ## Uncomment this section to rebuild the key file (a list of keys in a file)
+    # nrecs = process_voters(dataLocation, registered_voters)
+    # print(" nrecs = ", nrecs)
     #########
 
     dbfile = Configurations.DATABASE_PATH + Configurations.DATABASE_NAME
@@ -280,7 +284,7 @@ def main(args):
     t1 = time.process_time()
     blbuilder.write_dictionary(registered_voters)
     t2 = time.process_time()
-    print(" ====>time to write dictionary: ",(t2-t1))
+    print(" ====>time to write dictionary: ", (t2-t1))
     t1 = time.process_time()
 
     for i in range(5):              
@@ -290,9 +294,9 @@ def main(args):
         build_database(file_path_name,blbuilder)
 
     t2 = time.process_time()
-    print(" ====> time to build database: ",(t2-t1))
+    print(" ====> time to build database: ", (t2-t1))
 
-    print(" Total blocks written: ",blbuilder.close_output_file())
+    print(" Total blocks written: ", blbuilder.close_output_file())
 
 
 if __name__ == "__main__":
