@@ -5,7 +5,9 @@ from UsefulFunctions import error_print
 def verify_type(obj):
     print("Verifying Object type:")
     if isinstance(obj, interface_test):
-        print(f" ✓ `{obj.name}` is an instance of `interface_test`")
+        # if type(obj)==s3_test:
+        # if type(obj)==ebs_test:
+        print(f" ✓ `{obj.name}` of type {type(obj)} is an instance of `interface_test`")
         print(f"")
     else:
         print(f" 🗴 Object given is not an instance of `interface_test`")
