@@ -1,5 +1,3 @@
-from UsefulFunctions import error_print, is_pow_of_2
-
 class DefaultConfigurations:
     BLOCKSIZE = 4096
     LRECL = 128
@@ -16,6 +14,12 @@ class DefaultConfigurations:
     DATABASE_PATH = "./"
     DATABASE_NAME ="database.bin"
 
+    ## S3:
+    S3_REGION = "us-east-2"
+
+
+from UsefulFunctions import error_print, is_pow_of_2
+
 class Configurations:
     BLOCKSIZE = DefaultConfigurations.BLOCKSIZE
     LRECL = DefaultConfigurations.LRECL
@@ -28,6 +32,8 @@ class Configurations:
     DATABASE_PATH = DefaultConfigurations.DATABASE_PATH
     DATABASE_NAME = DefaultConfigurations.DATABASE_NAME
     optimize_reads = DefaultConfigurations.optimize_reads
+
+    S3_REGION = DefaultConfigurations.S3_REGION
     
     _CONFIGURABLES = [i for i in dir(DefaultConfigurations) if i[0].isupper()]
 
@@ -77,7 +83,6 @@ class Configurations:
                 if not is_pow_of_2(getattr(Configurations, i)):
                     error_print(f"`{i}` must be an number that is a power of 2")
 
-        # DF: `< or <=`?
         if Configurations.LRECL > Configurations.BLOCKSIZE:
             error_print("`LRECL` must be smaller than or equal to `BLOCKSIZE`")
         if Configurations.DRECL > Configurations.LRECL:
@@ -94,6 +99,9 @@ class Configurations:
         if not (type(Configurations.DATA_ATTRIBUTES) == list and len(Configurations.DATA_ATTRIBUTES) > 0
                 and all(type(i)==str for i in Configurations.DATA_ATTRIBUTES)):
             error_print("`DATA_HEADER` must be a non-empty list of strings")
+
+        if not (type(Configurations.S3_REGION) == str and len(Configurations.S3_REGION) > 0):
+            error_print("`S3_REGION` must be a non-empty string")
 
     def display():
         print("Configurations:")
