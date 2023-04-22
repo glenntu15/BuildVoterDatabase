@@ -1,7 +1,7 @@
 import sys
 import os
 import boto3
-from Config import DefaultConfigurations
+from Config_Defaults import DefaultConfigurations
 
 STRICT_ERROR_PRINT = True
 
