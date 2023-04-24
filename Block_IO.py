@@ -24,7 +24,11 @@ class Block_IO():
         self.bufferpos = BLOCKSIZE # force the initial reading of a block
         self.current_block = -1    # this is the block num (not counting directory blocks) held in the buffer
         self.optimize_reads = Configurations.optimize_reads
+#----------------------------------------------------------------------------------
 
+    def set_nobuffer_read(self):
+        self.bs.set_nobuffer_read()
+        print(" * buffer read turned off *")
 #----------------------------------------------------------------------------------
     ## 3 ref: `build_dictionary_from_file()`, BuildVoterDatabase, ReadFromDatabase
     def return_block_count(self):

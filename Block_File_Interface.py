@@ -1,22 +1,26 @@
 from UsefulFunctions import error_print
 from Config import Configurations
+import io
 
 class Block_File_Interface(object):
     BLOCKSIZE = Configurations.BLOCKSIZE
     def __init__(self):
         self.blocks_written = 0
         self.blocks_read = 0
-        self.blocks_replaced = 0    # DF: Currently unused? GAT -- will try to replace records sometime
+        #self.blocks_replaced = 0    # DF: Currently unused? GAT -- will try to replace records sometime
         self.number_of_seeks = 0
         self.total_seek_length_blocks = 0
         self.outfile = None
         self.infile = None
         self.isopen_read = False
         self.isopen_write = False
-       # self.buffer_pos = -1
+        self.buffer_size = self.BLOCKSIZE
         self.directory_block_offset = 0 # number of directory blocks so any 
                                         # block request is added to this number to
                                         # get the actual block number
+    def set_nobuffer_read(self):
+        self.buffer_zize = 0
+        print(" Note: default is: ",io.DEFAULT_BUFFER_SIZE)
 #----------------------------------------------------------------------------------
 
     def open_for_write(self,filename):
@@ -32,7 +36,7 @@ class Block_File_Interface(object):
     def open_for_read(self,filename):
         print(" Opening file: ",filename,)
         try:
-            self.infile = open(filename, 'rb')
+            self.infile = open(filename, 'rb',self.buffer_size)
         except IOError:
             error_print(f"could not open {filename}")
         self.isopen_read = True
@@ -77,7 +81,3 @@ class Block_File_Interface(object):
         #print(" buffer length after read: ",len(buffer))
         #print(" after seek and read buffer: ",buffer[0:64])
         return buffer
-
-
-
-
