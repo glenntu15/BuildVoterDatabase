@@ -81,9 +81,11 @@ def Find_Records_From_Keys(bio, registered_voters, key_file_path_name, key_list 
             string_parts0 = parts[fld_voterid].replace('"','')
             # string_parts1 = parts[fld_sosid].replace('"','')
             idnumber = int(string_parts0)
-            if idnumber in registered_voters.keys():
-                result = registered_voters[idnumber]
+            #if idnumber in registered_voters.keys():
+             #   result = registered_voters[idnumber]
         else:
+            if nrecs >= len(key_list):
+                break
             idnumber = key_list[nrecs]
 
         # now process this id
@@ -120,7 +122,36 @@ def Find_Records_From_Keys(bio, registered_voters, key_file_path_name, key_list 
         ## DF: Should this 3 be in Configurations somehow, maybe as the len() of a list in Configurations ?
         # if (nrecs > 4):
         #    break
+#----------------------------------------------------------------------------------
 
+def build_lists_from_keys(key_file_path_name):
+
+    splitchar = ',' if Configurations.DATA_FORMAT == "csv" else " "
+    fld_voterid = 1
+
+    key_list = []
+    print(" Opening file: ", key_file_path_name)
+    try:
+        infile = open(key_file_path_name, 'r')
+    except IOError:
+        error_print(f"could not open {key_file_path_name}")
+    
+    while True:
+        line = infile.readline()
+        if not line:
+            # print(" end of file, nrecs ", nrecs, "last record ", string_parts0)
+            break
+        # if (l > LRECL):
+        #    print(" record is too long, record is: ", line)           
+        
+        parts = line.split(splitchar)
+        
+        string_parts0 = parts[fld_voterid].replace('"','')
+        # string_parts1 = parts[fld_sosid].replace('"','')
+        idnumber = int(string_parts0)
+        key_list.append(idnumber)
+    infile.close()
+    return key_list
 #----------------------------------------------------------------------------------
 # Main starts here
 #----------------------------------------------------------------------------------
@@ -162,13 +193,27 @@ def main(args):
     Find_Records_From_Keys(bio, registered_voters, key_file_path_name)
     t2 = time.process_time()
     print(" ====> time to process records: ", (t2-t1))
-
+    print("")
     result = bio.get_block_file_stats()
     print(" blocks read: ", result[0], " number of seeks ", result[1], " total blocks in seek: ", result[2])
     print(" average seek length ", (result[2]/result[1]), " blocks ", (result[2]/result[1]) * BLOCKSIZE, "bytes")
+    print("")
     # nbread = bs.blocks_read
     # nseeks = bs.number_of_seeks
-    # nseekblocks = bs.total_seek_length_blocks
+
+    key_list = build_lists_from_keys(key_file_path_name)
+    print(" number of keys: ",len(key_list))
+    print("\n now process records based on list...")
+    t1 = time.process_time()
+    Find_Records_From_Keys(bio, registered_voters, key_file_path_name,key_list)
+    t2 = time.process_time()
+    print(" ====> time to process records: ", (t2-t1))
+    print()
+    bio.set_nobuffer_read()
+    t1 = time.process_time()
+    Find_Records_From_Keys(bio, registered_voters, key_file_path_name,key_list)
+    t2 = time.process_time()
+    print(" ====> time to process records: ", (t2-t1))
 
 if __name__ == "__main__":
     main(sys.argv[1:])
