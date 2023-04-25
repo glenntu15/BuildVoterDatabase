@@ -34,8 +34,10 @@ def list_buckets():
     except Exception as e:
         error_print(e)
 
-def create_bucket(bucket_name:str, region:str = ""):
+def create_bucket(bucket_name:str = "", region:str = ""):
     try:
+        if len(bucket_name)==0:
+            bucket_name = DefaultConfigurations.S3_BUCKET_NAME
         boto3_client.create_bucket(Bucket = bucket_name,
             CreateBucketConfiguration = {"LocationConstraint": region if region else DefaultConfigurations.S3_REGION})
     except Exception as e:
@@ -77,10 +79,17 @@ def download_file(file_name:str, bucket_name:str, object_name:str = ""):
     if not object_name:
         object_name = os.path.basename(file_name)
     
+    original_dir = os.getcwd()
+    download_dir = 'data_s3_searched'
+    if os.path.basename(original_dir) != download_dir:
+        os.chdir( os.path.join(original_dir, download_dir) )
+
     try:
         boto3_client.download_file(bucket_name, object_name, file_name)
     except Exception as e:
         error_print(e)
+
+    os.chdir(original_dir)
 
 def delete_file(bucket_name:str, file_name:str):
     try:

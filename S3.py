@@ -2,6 +2,15 @@ from UsefulFunctions import *
 from Config import Configurations
 import time
 import math
+import os
+
+TOTAL_RECORDS = 2487525
+NUM_OBJECTS   = 10
+UPLOAD        = False
+
+MIN_RECORDS_PER_OBJECT, R = divmod(TOTAL_RECORDS, NUM_OBJECTS)
+MAX_RECORDS_PER_OBJECT    = MIN_RECORDS_PER_OBJECT+1 if R > 1 else MIN_RECORDS_PER_OBJECT
+BLOCKS_WITH_MAX_RECORDS   = R if R > 1 else NUM_OBJECTS
 
 nrecs_write = 0
 nrecs_read = 0
@@ -11,9 +20,38 @@ max_rec = 0
 avg_rec = 0
 
 split_chr = ","
-# test_dict = dict()
 
-def keep_rec_summary_stats(rec:int, l:str):
+location_dict = dict()
+objects_for_s3 = dict()
+
+# split_lengths = dict()
+# def get_split_length(i):
+#     global split_lengths
+#     length = D + min(i+1, M) - min(i, M)
+#     if length in split_lengths:
+#         split_lengths[length] += 1
+#     else:
+#         print(f"new length ({length}) at {i}")
+#         split_lengths[length] = 1
+#     return length
+# def get_split_lengths():    
+#     for i in range(NUM_OBJECTS):
+#         get_split_length(i)
+#     print(split_lengths)
+
+# block_rec_lengths = dict()
+# def set_block_rec_length(length):
+#     if length in block_rec_lengths:
+#         block_rec_lengths[length] += 1
+#     else:
+#         print(f"new length ({length}) at {nrecs_write}")
+#         block_rec_lengths[length] = 1
+
+# def get_block_rec_lengths():
+#     print(block_rec_lengths)
+
+##-------------------------------------------------------------------------------
+def keep_rec_summary_stats(rec:int):
     global nrecs_write
     global min_rec
     global max_rec
@@ -28,41 +66,144 @@ def keep_rec_summary_stats(rec:int, l:str):
     a = 1 / nrecs_write
     avg_rec = a*rec + (1-a)*avg_rec
 
+##-------------------------------------------------------------------------------
+# files_s3 = []
+def create_local_files_s3():
+    original_dir = os.getcwd()
+    files_for_s3_dir = 'objects_to_s3'
+    if os.path.basename(original_dir) != files_for_s3_dir:
+        os.chdir( os.path.join(original_dir, files_for_s3_dir) )
 
-def build_s3(file:str):
-    global test_dict
+    filename = 'object'
+    for i in range(NUM_OBJECTS):
+        f = filename + str(i)
+        try:
+            open(f, 'x').close()
+        except FileExistsError:
+            os.remove(f)
+            open(f, 'x').close()
+
+        # files_s3.append(open(f, 'a'))
+    
+    print(f'Created {NUM_OBJECTS} local files')
+    os.chdir(original_dir)
+
+def compile_records_into_local_file_s3(f:str, lines:str):
+    original_dir = os.getcwd()
+    files_for_s3_dir = 'objects_to_s3'
+    if os.path.basename(original_dir) != files_for_s3_dir:
+        os.chdir( os.path.join(original_dir, files_for_s3_dir) )
+    
+    ## Debug, check:
+    with open(f, 'w') as f_b:
+        f_b.write(''.join([l for l in lines]))
+    ## Upload String to Bucket
+    # if UPLOAD:
+    #     upload_string(f, Configurations.S3_BUCKET_NAME, ''.join([l for l in lines]))
+    
+    # if close:
+    #     print(f"Closed file object{block_num}")
+    #     files_s3[b].close()
+    
+    os.chdir(original_dir)
+
+def upload_lines_s3(block_num:int, lines:str):
+    filename = 'object'
+    f = filename + str(block_num-1)
+
+    if UPLOAD:
+    #     upload_string(f, Configurations.S3_BUCKET_NAME, ''.join([l for l in lines]))
+        return
+
+    compile_records_into_local_file_s3(f, lines)
+
+
+def files_s3_summary():
+    original_dir = os.getcwd()
+    print(" compile_records_into_files_s3 cwd:", original_dir)
+    files_for_s3_dir = 'objects_to_s3'
+    if os.path.basename(original_dir) != files_for_s3_dir:
+        os.chdir( os.path.join(original_dir, files_for_s3_dir) )
+    
+    file_name = 'object'
+    # for i in range(NUM_OBJECTS):
+    #     files_s3[i].close()
+    for i in range(NUM_OBJECTS):
+        f = file_name + str(i)
+        with open(f, 'r') as f_i:
+            print(f"File {f} | nrecs: {len(f_i.readlines())}")
+
+    os.chdir(original_dir)
+##-------------------------------------------------------------------------------
+
+def build_s3(file:str, block_num:int, offset:int, block_length:int, buffer:list):
+    global location_dict
 
     with open(file, "r") as f:
-        l = f.readline()
-        l = f.readline()
+        lines = f.readlines()    # Skip header
+        i = block_start = 1
+        l = lines[i]
         while l:
-            l = l[:Configurations.LRECL]
+            if offset == block_length:
+                block_num += 1
+                offset = 0
+                if block_num > BLOCKS_WITH_MAX_RECORDS:
+                    block_length = MIN_RECORDS_PER_OBJECT
+                # set_block_rec_length(block_length)
+            
+            # l = l[:Configurations.LRECL]
 
-            keep_rec_summary_stats(len(l), l)
+            keep_rec_summary_stats(len(l))
 
             record = l.split(split_chr)
-
-            if nrecs_write > 2448773:
-                ## Upload String to Bucket
-                upload_string(record[1], Configurations.S3_BUCKET_NAME, l)
             
             ## Test:
             # test_dict[int(record[1])] = l
-            
-            l = f.readline()
+            location_dict[int(record[1])] = (block_num, offset)
+
+            offset += 1
+            i += 1
+            if offset == block_length:
+                upload_lines_s3(block_num, buffer + lines[block_start:i])
+                block_start = i
+                buffer = []
+            if i == len(lines):
+                break
+            l = lines[i]
+    
+    buffer = lines[block_start:]
+    # print("end of 1 file's build: ", block_num, offset)
+    return block_num, offset, block_length, buffer
 
 def build_voter_database_s3():
     t1 = time.process_time()
+    if not UPLOAD: # Debug
+        create_local_files_s3()
+    block_num = 1
+    offset = 0
+    block_length = MAX_RECORDS_PER_OBJECT
+    buffer = []
+    # set_block_rec_length(block_length)
     file = Configurations.DATA_PATH + Configurations.DATA_FILE_NAME_ROOT
     for i in range(5):
-        build_s3(file + str(i) + ".csv")
+        block_num, offset, block_length, buffer = build_s3(file + str(i) + ".csv", block_num, offset, block_length, buffer)
+    if not (block_num == NUM_OBJECTS and offset == MIN_RECORDS_PER_OBJECT):
+        error_print("Did not split correctly")
     t2 = time.process_time()
+    print(f" num objects: {block_num}")
     print(" nrecs: ", nrecs_write, " (min, avg, max) record length: ", (min_rec, avg_rec, max_rec))
     print(" ====> time to build dictionary: ", (t2-t1))
 
-
+##-------------------------------------------------------------------------------
+test_read_dict = dict()
+buffer_read_block_num = -1
+buffer_read = ''
+buffer_read_hits = 0
 def read_s3(file:str):
     global nrecs_read
+    global buffer_read_block_num
+    global buffer_read
+    global buffer_read_hits
 
     with open(file, "r") as f:
         l = f.readline()
@@ -75,20 +216,32 @@ def read_s3(file:str):
             #     break
 
             ## Download File from Bucket
-            download_file(record[1].rjust(8, "0"), Configurations.S3_BUCKET_NAME)
+            # download_file(record[1].rjust(8, "0"), Configurations.S3_BUCKET_NAME)
             
             ## Test:
-            # test = test_dict[int(record[1])]
-            # if nrecs_read % 10000 == 0:
-            #     print( nrecs_read, test)
+            block_num, offset = location_dict[int(record[1])]
+            if block_num != buffer_read_block_num:
+                filename = 'objects_to_s3/object'
+                file = filename + str(block_num-1)
+                with open(file, 'r') as f_b:
+                    buffer_read = f_b.readlines()
+            else:
+                buffer_read_hits += 1
             
-            if nrecs_read % 50000 == 0:
-                print("Read thus far:", nrecs_read)
+            test_read_dict[int(record[1])] = buffer_read[offset]
+
+            if nrecs_read % 10000 == 0:
+                print(f" Read thus far: {nrecs_read}, id: [{int(record[1])}] => {(block_num, offset)}")
+                print(f"  - Current rec: {test_read_dict[int(record[1])]}")
+
+            # if nrecs_read % 10000 == 0:
+            #     print("Read thus far:", nrecs_read)
             
             nrecs_read += 1
             l = f.readline()
     
     print(" nrecs read: ", nrecs_read)
+    print(" nrecs in test_read_dict:", len(test_read_dict))
 
 def read_voter_database_s3():
     keyfile = "searchkeys.txt"
@@ -100,17 +253,23 @@ def read_voter_database_s3():
     t2 = time.process_time()
     print(" ====> time to read records: ", (t2-t1))
 
+##-------------------------------------------------------------------------------
 
 def main():
     Configurations.initialize_default()
+    Configurations.S3_BUCKET_NAME += f'_{NUM_OBJECTS}'
+    print(Configurations.S3_BUCKET_NAME)
 
     ## MUST `init_boto3()` Prior to All AWS S3 Functions
-    init_boto3()
+    # init_boto3()
     ## Create Bucket:
     # create_bucket()
 
-    # build_voter_database_s3()
-    # print()
+    build_voter_database_s3()
+    print(" nrecs in location_dict:", len(location_dict))
+    # get_block_rec_lengths()
+    files_s3_summary()
+    # get_split_lengths()
     read_voter_database_s3()
 
 

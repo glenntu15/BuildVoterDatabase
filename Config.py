@@ -15,6 +15,7 @@ class Configurations:
     optimize_reads = DefaultConfigurations.optimize_reads
 
     S3_REGION = DefaultConfigurations.S3_REGION
+    S3_BUCKET_NAME = DefaultConfigurations.S3_BUCKET_NAME
     
     _CONFIGURABLES = [i for i in dir(DefaultConfigurations) if i[0].isupper()]
 
@@ -30,6 +31,10 @@ class Configurations:
         Configurations.DATABASE_PATH = DefaultConfigurations.DATABASE_PATH
        
         Configurations.optimize_reads = False
+
+        Configurations.S3_REGION = DefaultConfigurations.S3_REGION
+        Configurations.S3_BUCKET_NAME = DefaultConfigurations.S3_BUCKET_NAME
+        
         Configurations.verify()
 
     def initialize(blocksize = None, lrecl = None, dict_recl = None, voters_to_proc = None,

@@ -16,3 +16,4 @@ class DefaultConfigurations:
 
     ## S3:
     S3_REGION = "us-east-2"
+    S3_BUCKET_NAME = "build-voter-database-s3"
