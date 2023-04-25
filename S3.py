@@ -242,6 +242,7 @@ def read_s3(file:str):
     
     print(" nrecs read: ", nrecs_read)
     print(" nrecs in test_read_dict:", len(test_read_dict))
+    print(" # of hits:", buffer_read_hits)
 
 def read_voter_database_s3():
     keyfile = "searchkeys.txt"
