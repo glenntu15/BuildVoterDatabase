@@ -1,3 +1,4 @@
+import time
 import sys
 import os
 import boto3
@@ -50,9 +51,13 @@ def delete_bucket(bucket_name:str):
         error_print(e)
 
 def upload_string(file_name:str, bucket_name:str, data_string:str):
+    t1 = time.process_time()
     if len(data_string) == 0:
         error_print("`data_string` given to insert was empty.")
 
+    ## Busy wait test:
+    # for i in range(10000000):
+    #     j = 0
     try:
         boto3_client.put_object(
             Body = data_string,
@@ -61,6 +66,9 @@ def upload_string(file_name:str, bucket_name:str, data_string:str):
         )
     except Exception as e:
         error_print(e)
+    t2 = time.process_time()
+    return t2-t1
+
 
 # Replaced by upload_string():
 '''
@@ -76,6 +84,7 @@ def upload_file(file_name:str, bucket_name:str, object_name:str = ""):
 '''
 
 def download_file(file_name:str, bucket_name:str, object_name:str = ""):
+    t1 = time.process_time()
     if not object_name:
         object_name = os.path.basename(file_name)
     
@@ -84,19 +93,27 @@ def download_file(file_name:str, bucket_name:str, object_name:str = ""):
     if os.path.basename(original_dir) != download_dir:
         os.chdir( os.path.join(original_dir, download_dir) )
 
+    ## Busy wait test:
+    # for i in range(10000000):
+    #     j = 0
     try:
         boto3_client.download_file(bucket_name, object_name, file_name)
     except Exception as e:
         error_print(e)
 
     os.chdir(original_dir)
+    t2 = time.process_time()
+    return t2-t1
 
 def delete_file(bucket_name:str, file_name:str):
+    t1 = time.process_time()
     try:
         boto3_client.delete_object(Bucket = bucket_name,
                                    Key = file_name)
     except Exception as e:
         error_print(e)
+    t2 = time.process_time()
+    return t2-t1
 
 
 def test_s3_functions():
