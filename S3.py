@@ -10,7 +10,7 @@ NUM_OBJECTS   = 10
 BUCKET        = Configurations.S3_BUCKET_NAME + "-" + str(NUM_OBJECTS)
 USE_S3        = True
 JUST_READ     = False
-BUFFER_1      = False
+BUFFER_1      = True
 
 MIN_RECORDS_PER_OBJECT, R = divmod(TOTAL_RECORDS, NUM_OBJECTS)
 MAX_RECORDS_PER_OBJECT    = MIN_RECORDS_PER_OBJECT+1 if R > 1 else MIN_RECORDS_PER_OBJECT
@@ -117,8 +117,9 @@ def upload_lines_s3(block_num:int, lines:str):
     f = filename + str(block_num-1)
 
     if USE_S3:
-        print(f" uploaded file: {f}")
         build_time += upload_string(f, BUCKET, ''.join([l for l in lines]))
+        if block_num % max(1, NUM_OBJECTS//10) == 0:
+            print(f" uploaded file: {f}")
         return
 
     compile_records_into_local_file_s3(f, lines)
@@ -232,8 +233,9 @@ def read_s3(file:str):
                 buffer_read_hits += 1
             else:
                 if USE_S3:
-                    print(f" Downloaded file: {file}")
                     read_time += download_file(filename, BUCKET)
+                    if not BUFFER_1 and block_num % max(1, NUM_OBJECTS//10) == 0:
+                        print(f" Downloaded file: {file}")
                 if BUFFER_1:
                     buffer_read_block_nums.clear()
                 buffer_read_block_nums.append(block_num)
