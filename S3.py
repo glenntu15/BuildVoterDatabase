@@ -6,10 +6,11 @@ import os
 import linecache
 
 TOTAL_RECORDS = 2487525
-NUM_OBJECTS   = 1000
+NUM_OBJECTS   = 10
 BUCKET        = Configurations.S3_BUCKET_NAME + "-" + str(NUM_OBJECTS)
-UPLOAD        = True
+USE_S3        = True
 JUST_READ     = False
+BUFFER_1      = False
 
 MIN_RECORDS_PER_OBJECT, R = divmod(TOTAL_RECORDS, NUM_OBJECTS)
 MAX_RECORDS_PER_OBJECT    = MIN_RECORDS_PER_OBJECT+1 if R > 1 else MIN_RECORDS_PER_OBJECT
@@ -115,7 +116,7 @@ def upload_lines_s3(block_num:int, lines:str):
     filename = 'object'
     f = filename + str(block_num-1)
 
-    if UPLOAD:
+    if USE_S3:
         print(f" uploaded file: {f}")
         build_time += upload_string(f, BUCKET, ''.join([l for l in lines]))
         return
@@ -126,7 +127,7 @@ def upload_lines_s3(block_num:int, lines:str):
 def files_s3_summary():
     original_dir = os.getcwd()
     print(" compile_records_into_files_s3 cwd:", original_dir)
-    files_for_s3_dir = 'objects_to_s3'
+    files_for_s3_dir = 'data_s3_searched' if USE_S3 else 'objects_to_s3'
     if os.path.basename(original_dir) != files_for_s3_dir:
         os.chdir( os.path.join(original_dir, files_for_s3_dir) )
     
@@ -176,12 +177,12 @@ def build_s3(file:str, block_num:int, offset:int, block_length:int, buffer:list)
             l = lines[i]
     
     buffer += lines[block_start:]
-    print("end of 1 file's build: ", block_num, offset)
+    # print("end of 1 file's build: ", block_num, offset)
     return block_num, offset, block_length, buffer
 
 def build_voter_database_s3():
     t1 = time.process_time()
-    if not UPLOAD and not JUST_READ: # Debug
+    if not USE_S3 and not JUST_READ: # Debug
         create_local_files_s3()
     block_num = 1
     offset = 0
@@ -223,16 +224,18 @@ def read_s3(file:str):
             
             ## Test:
             block_num, offset = location_dict[int(record[1])]
-            download_dir = 'data_s3_searched/'
+            download_dir = 'data_s3_searched/' if USE_S3 else 'objects_to_s3/'
             filename = 'object' + str(block_num - 1)
             file = download_dir + filename
             ## Download File from Bucket
             if block_num in buffer_read_block_nums:
                 buffer_read_hits += 1
             else:
-                print(f" Downloaded file: {file}")
-                if UPLOAD:
+                if USE_S3:
+                    print(f" Downloaded file: {file}")
                     read_time += download_file(filename, BUCKET)
+                if BUFFER_1:
+                    buffer_read_block_nums.clear()
                 buffer_read_block_nums.append(block_num)
 
             buffer_read = linecache.getline(file, offset+1)
@@ -281,7 +284,7 @@ def main():
     print(f" > time to init boto3: {t2-t1}")
     ## Create Bucket:
     t1 = time.process_time()
-    # create_bucket(BUCKET)
+    create_bucket(BUCKET)
     t2 = time.process_time()
     print(f" > time to create bucket: {t2-t1}")
 
@@ -291,12 +294,13 @@ def main():
     print(" nrecs in location_dict:", len(location_dict))
     print("  Actual total time to Build:", t2-t1)
     # get_block_rec_lengths()
-    # files_s3_summary()
     # get_split_lengths()
     t1 = time.time()
-    # read_voter_database_s3()
+    read_voter_database_s3()
     t2 = time.time()
     print("  Actual total time to Read:", t2-t1)
+    
+    # files_s3_summary()
 
 
 if __name__ == "__main__":
